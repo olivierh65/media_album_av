@@ -1,0 +1,11 @@
+uuid: d3238784-b837-4792-b19f-9ce7a05fd9d9
+langcode: und
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: y84_KyTrvIet7rfqlXQUsGwgXqq9jpgxcMwbirv5w54
+name: 'Media Album AV Event'
+vid: media_album_av_event
+description: 'Media events'
+weight: 0
+new_revision: false

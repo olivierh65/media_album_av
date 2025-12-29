@@ -1,0 +1,15 @@
+uuid: a25d67c9-3dd7-427d-9513-aa4517d2e3a8
+langcode: fr
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: JUPAU7MASE_tSSaOekjupO1ZFd1CW8FZ-7u0m5PjeLI
+id: media_album_av_photo
+label: 'Media Album AV - Photo'
+description: 'Media type for photos in media av albums'
+source: image
+queue_thumbnail_downloads: false
+new_revision: false
+source_configuration:
+  source_field: field_media_image_1
+field_map: {  }

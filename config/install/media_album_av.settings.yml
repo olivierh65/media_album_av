@@ -1,0 +1,12 @@
+langcode: fr
+status: true
+dependencies: {  }
+id: media_album_av.settings
+class: null
+uuid: null
+_core:
+  default_config_hash: R4IF2aVBgMukABbg72jAqB1pzHLjzJXljwLwDVNbpJw
+node_authors_field: field_media_album_av_authors
+author_fields:
+  media_album_av_photo: field_media_album_av_photo_autho
+  media_album_av_video: field_media_album_av_video_autho

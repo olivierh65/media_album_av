@@ -1,0 +1,31 @@
+uuid: a54ad068-6413-4ede-a219-3b73bcf85454
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_media_album_av_event
+    - node.type.media_album_av
+    - taxonomy.vocabulary.media_album_av_event
+_core:
+  default_config_hash: zNM2oKY6ZJApaWdjbY2xUePbFtvC-mgu1665XsMpb7A
+id: node.media_album_av.field_media_album_av_event
+field_name: field_media_album_av_event
+entity_type: node
+bundle: media_album_av
+label: Event
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:filter_existing_terms'
+  handler_settings:
+    target_bundles:
+      media_album_av_event: media_album_av_event
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

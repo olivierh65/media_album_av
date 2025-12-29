@@ -1,0 +1,26 @@
+uuid: e418cfde-9800-47f6-a1cf-503b34ae3a7d
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_photo_descr
+    - filter.format.basic_html
+    - media.type.media_album_av_photo
+  module:
+    - text
+_core:
+  default_config_hash: H1pjrqmlUHH7MRqKAg-P9ub3jPKk5GqkvK8--YT1hFU
+id: media.media_album_av_photo.field_media_album_av_photo_descr
+field_name: field_media_album_av_photo_descr
+entity_type: media
+bundle: media_album_av_photo
+label: Description
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - basic_html
+field_type: text_long

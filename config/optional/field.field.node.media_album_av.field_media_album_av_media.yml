@@ -1,0 +1,37 @@
+uuid: cb1a695c-14a3-4c6c-bda7-ad2bf8b734c9
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_media_album_av_media
+    - media.type.image
+    - media.type.media_album_av_photo
+    - media.type.media_album_av_video
+    - media.type.video
+    - node.type.media_album_av
+_core:
+  default_config_hash: '-I9IuQI2KBHe0xwEfWETam3gPmJJTpZl5ExUmpFBRBA'
+id: node.media_album_av.field_media_album_av_media
+field_name: field_media_album_av_media
+entity_type: node
+bundle: media_album_av
+label: Media
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:media'
+  handler_settings:
+    target_bundles:
+      image: image
+      media_album_av_photo: media_album_av_photo
+      media_album_av_video: media_album_av_video
+      video: video
+    sort:
+      field: _none
+      direction: ASC
+    auto_create: false
+    auto_create_bundle: media_album_av_photo
+field_type: entity_reference

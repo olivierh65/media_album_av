@@ -1,0 +1,49 @@
+uuid: 02efad65-afd1-4a5b-b60b-393d990b1cf0
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_video_file_1
+    - media.type.media_album_av_video
+  module:
+    - file
+    - filefield_paths
+third_party_settings:
+  filefield_paths:
+    enabled: true
+    file_path:
+      value: '[date:custom:Y]-[date:custom:m]'
+      options:
+        slashes: false
+        pathauto: false
+        transliterate: false
+    file_name:
+      value: '[file:ffp-name-only-original].[file:ffp-extension-original]'
+      options:
+        slashes: false
+        pathauto: false
+        transliterate: false
+    temp_location: ''
+    redirect: false
+    retroactive_update: false
+    active_updating: false
+_core:
+  default_config_hash: IK9sDFh6jrI5lH2o8JhotD0DxOP-1pIPNEVUp7_MLjo
+id: media.media_album_av_video.field_media_video_file_1
+field_name: field_media_video_file_1
+entity_type: media
+bundle: media_album_av_video
+label: 'Video file'
+description: ''
+required: true
+translatable: true
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:file'
+  handler_settings: {  }
+  file_directory: '[date:custom:Y]-[date:custom:m]'
+  file_extensions: mp4
+  max_filesize: 250MB
+  description_field: true
+field_type: file

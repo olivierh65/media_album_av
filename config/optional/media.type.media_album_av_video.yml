@@ -1,0 +1,15 @@
+uuid: 5f8bf773-be3f-42f7-866d-73a3024801ca
+langcode: fr
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: ELO5P5cp0Vj6qg_aVyWqEOZuwGQtpg5KJgGKnuK-ICg
+id: media_album_av_video
+label: 'Media Album AV - Video'
+description: 'Media type for videos in media av albums'
+source: video_file
+queue_thumbnail_downloads: false
+new_revision: false
+source_configuration:
+  source_field: field_media_video_file_1
+field_map: {  }

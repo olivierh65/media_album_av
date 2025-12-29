@@ -1,0 +1,11 @@
+uuid: 5109caac-fbf6-4a9e-9911-dcdfee667592
+langcode: und
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: CfO-mt4IwjS8UMfoWQaXhikL1ocB7IfGa3jo94L8M94
+name: 'Media Album AV Category'
+vid: media_album_av_category
+description: 'Media category'
+weight: 0
+new_revision: false

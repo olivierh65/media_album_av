@@ -1,0 +1,5 @@
+media_album_av.settings:
+  title: 'Media Album AV Settings'
+  description: 'Configure author fields for media types'
+  parent: system.admin_config_media
+  route_name: media_album_av.settings

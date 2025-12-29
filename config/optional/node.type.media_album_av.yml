@@ -1,0 +1,19 @@
+uuid: 98e0f6b5-6d49-48e1-a652-d07994195ef3
+langcode: fr
+status: true
+dependencies:
+  module:
+    - menu_ui
+third_party_settings:
+  menu_ui:
+    available_menus: {  }
+    parent: ''
+_core:
+  default_config_hash: Qz0UCziDxUAdgvKMYNYESJkB_IAZYygSYw6SmT4XKsM
+name: 'Media Album AV'
+type: media_album_av
+description: 'Content type for multimedia media av albums'
+help: null
+new_revision: true
+preview_mode: 1
+display_submitted: true

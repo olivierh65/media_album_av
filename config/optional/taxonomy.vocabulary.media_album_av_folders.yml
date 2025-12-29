@@ -1,0 +1,11 @@
+uuid: bcc27c14-b20f-42d6-8885-050d47df25bd
+langcode: und
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: ITnMK8CgJ_ZF7MHT9pUt17hqmMagfkvRsDQhg0cEhAk
+name: 'Media Album AV Folders'
+vid: media_album_av_folders
+description: 'To organize your Media Albums AV'
+weight: 0
+new_revision: false

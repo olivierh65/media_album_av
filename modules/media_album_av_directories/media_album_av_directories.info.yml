@@ -1,0 +1,7 @@
+name: 'Media Album AV Directories'
+type: module
+description: 'Directories integration for Media Album AV'
+core_version_requirement: ^10
+dependencies:
+  - media_album_av
+  - media_directories

@@ -1,0 +1,31 @@
+uuid: f3b68306-91de-44ae-8596-cc640269ecd1
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_photo_autho
+    - media.type.media_album_av_photo
+    - taxonomy.vocabulary.media_album_av_authors
+_core:
+  default_config_hash: 7L_3ZS8ASSicnc75jfQyceJZLH40DuzQrc0kr3siFUI
+id: media.media_album_av_photo.field_media_album_av_photo_autho
+field_name: field_media_album_av_photo_autho
+entity_type: media
+bundle: media_album_av_photo
+label: Author
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:filter_existing_terms'
+  handler_settings:
+    target_bundles:
+      media_album_av_authors: media_album_av_authors
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

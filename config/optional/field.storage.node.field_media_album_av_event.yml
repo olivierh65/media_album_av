@@ -1,0 +1,22 @@
+uuid: 71db1333-bacc-4d2e-8231-a1dc03a63bcd
+langcode: fr
+status: true
+dependencies:
+  module:
+    - node
+    - taxonomy
+_core:
+  default_config_hash: x4YLK0kcff-2GbDT1H6O8d-kt4jqDwWG8f10FaxoUeE
+id: node.field_media_album_av_event
+field_name: field_media_album_av_event
+entity_type: node
+type: entity_reference
+settings:
+  target_type: taxonomy_term
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

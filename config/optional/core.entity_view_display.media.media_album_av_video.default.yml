@@ -1,0 +1,66 @@
+uuid: 3ab1435b-a982-4058-a44c-96664c47b6ad
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.field.media.media_album_av_video.field_media_album_av_video_autho
+    - field.field.media.media_album_av_video.field_media_album_av_video_categ
+    - field.field.media.media_album_av_video.field_media_album_av_video_descr
+    - field.field.media.media_album_av_video.field_media_video_file_1
+    - media.type.media_album_av_video
+  module:
+    - file
+    - text
+_core:
+  default_config_hash: Z03p5QvClGmbH9Ro0LZCnGIgj15KIuLCA3nxILXZzOs
+id: media.media_album_av_video.default
+targetEntityType: media
+bundle: media_album_av_video
+mode: default
+content:
+  field_media_album_av_video_autho:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 1
+    region: content
+  field_media_album_av_video_categ:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 3
+    region: content
+  field_media_album_av_video_descr:
+    type: text_default
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_media_video_file_1:
+    type: file_video
+    label: visually_hidden
+    settings:
+      controls: true
+      autoplay: false
+      loop: false
+      multiple_file_display_type: tags
+      muted: false
+      width: 640
+      height: 480
+    third_party_settings: {  }
+    weight: 0
+    region: content
+hidden:
+  created: true
+  entity_print_view_epub: true
+  entity_print_view_pdf: true
+  entity_print_view_word_docx: true
+  langcode: true
+  name: true
+  thumbnail: true
+  uid: true

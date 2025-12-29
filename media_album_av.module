@@ -1,0 +1,156 @@
+<?php
+
+/**
+ * @file
+ * Media Album AV module.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\node\NodeInterface;
+use Drupal\views\ViewExecutable;
+use Drupal\views\Plugin\views\query\QueryPluginBase;
+
+/**
+ * Implements hook_form_alter().
+ */
+function media_album_av_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Customizations here if needed
+}
+
+/**
+ * Implements hook_theme().
+ */
+function media_album_av_theme() {
+  return [
+    'media_album_av_gallery' => [
+      'variables' => ['items' => []],
+      'template' => 'media-album-av-gallery',
+    ],
+  ];
+}
+
+function media_album_av_entity_presave(EntityInterface $entity) {
+  if ($entity instanceof NodeInterface && $entity->bundle() === 'media_album_av') {
+    $authors = [];
+    $field_manager = \Drupal::service('entity_field.manager');
+    $config = \Drupal::config('media_album_av.settings');
+    $author_fields = $config->get('author_fields') ?? [];
+    $node_authors_field = $config->get('node_authors_field');
+
+    // Si aucune configuration d'auteur n'est définie, ne rien faire
+    if (empty($author_fields) || empty($node_authors_field)) {
+      return;
+    }
+
+    // Vérifier que le nœud a le champ configuré
+    if (!$entity->hasField($node_authors_field)) {
+      return;
+    }
+
+    // Trouver le champ de référence media du nœud
+    $node_fields = $field_manager->getFieldDefinitions('node', 'media_album_av');
+    $media_field_name = NULL;
+
+    foreach ($node_fields as $field_name => $field_def) {
+      if ($field_def->getType() === 'entity_reference' &&
+          $field_def->getSetting('target_type') === 'media') {
+        $media_field_name = $field_name;
+        break;
+      }
+    }
+
+    if (!$media_field_name || !$entity->hasField($media_field_name)) {
+      return;
+    }
+
+    // Parcourir les médias référencés
+    foreach ($entity->get($media_field_name) as $media_ref) {
+      $media = $media_ref->entity;
+      if (!$media) {
+        continue;
+      }
+
+      $media_bundle = $media->bundle();
+
+      // Vérifier si un champ auteur est configuré pour ce type de média
+      if (!isset($author_fields[$media_bundle])) {
+        continue;
+      }
+
+      $author_field = $author_fields[$media_bundle];
+
+      // Vérifier que le média a le champ configuré
+      if (!$media->hasField($author_field)) {
+        continue;
+      }
+
+      // Récupérer la définition du champ
+      $media_fields = $field_manager->getFieldDefinitions('media', $media_bundle);
+      $field_def = $media_fields[$author_field] ?? NULL;
+
+      if (!$field_def) {
+        continue;
+      }
+
+      // Traiter les champs texte
+      if ($field_def->getType() === 'string') {
+        foreach ($media->get($author_field) as $author_ref) {
+          if (!empty($author_ref->value)) {
+            $authors[$author_ref->value] = $author_ref->value;
+          }
+        }
+      }
+      // Traiter les références à taxonomie
+      elseif ($field_def->getType() === 'entity_reference' &&
+              $field_def->getSetting('target_type') === 'taxonomy_term') {
+        foreach ($media->get($author_field) as $term_ref) {
+          if (!empty($term_ref->target_id)) {
+            $term = $term_ref->entity;
+            if ($term) {
+              $authors[$term->id()] = $term->getName();
+            }
+          }
+        }
+      }
+    }
+
+    if (!empty($authors)) {
+      // Trier les auteurs alphabétiquement
+      asort($authors);
+
+      // Créer une chaîne de caractères séparée par des virgules
+      $authors_list = implode(', ', $authors);
+
+      // Stocker dans le champ configuré du nœud
+      $entity->set($node_authors_field, $authors_list);
+    }
+  }
+}
+
+function media_album_av_views_pre_view(ViewExecutable $view, $display_id, array &$args) {
+  if ($view->id() !== 'media_library') {
+    return;
+  }
+
+  // Exemple : seulement pour un display précis.
+  if ($display_id !== 'page') {
+    return;
+  }
+
+  // Ici tu peux modifier :
+  // - arguments
+  // - exposed filters
+  // - query conditions
+}
+
+/**
+ * Implements hook_views_query_alter().
+ */
+function media_album_av_views_query_alter(ViewExecutable $view, QueryPluginBase $query) {
+  if ($view->id() !== 'media_library') {
+    return;
+  }
+
+  // Exemple : forcer un filtre sur ton vocabulaire.
+}

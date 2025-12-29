@@ -1,0 +1,21 @@
+uuid: 13b05b2b-e661-4fba-b8ff-3ac5c91690c1
+langcode: fr
+status: true
+dependencies:
+  module:
+    - node
+_core:
+  default_config_hash: jjjjg0Hc0SrNXn1n6fcuaz136ovRsyZC4yzcSwF2AFg
+id: node.field_media_album_av_authors
+field_name: field_media_album_av_authors
+entity_type: node
+type: string_long
+settings:
+  case_sensitive: false
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

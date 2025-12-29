@@ -1,0 +1,7 @@
+media_album_av.settings:
+  path: '/admin/config/media/media-album-av'
+  defaults:
+    _form: '\Drupal\media_album_av\Form\MediaAlbumAvSettingsForm'
+    _title: 'Media Album AV Settings'
+  requirements:
+    _permission: 'media_album_av.administer_settings'

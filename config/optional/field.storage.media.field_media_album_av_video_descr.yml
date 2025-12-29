@@ -1,0 +1,21 @@
+uuid: 7c50ceab-85e1-4505-9ee0-3970ffb97952
+langcode: fr
+status: true
+dependencies:
+  module:
+    - media
+    - text
+_core:
+  default_config_hash: NTZzn8lbBNou5QmtiRYHMSs6peoym3hVGfLm9hYwgKM
+id: media.field_media_album_av_video_descr
+field_name: field_media_album_av_video_descr
+entity_type: media
+type: text_long
+settings: {  }
+module: text
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

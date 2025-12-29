@@ -1,0 +1,21 @@
+uuid: cc1ccb68-86eb-4b3e-869e-744eb7a5fcfb
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_media_album_av_date
+    - node.type.media_album_av
+  module:
+    - datetime
+id: node.media_album_av.field_media_album_av_date
+field_name: field_media_album_av_date
+entity_type: node
+bundle: media_album_av
+label: Date
+description: 'Album date'
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings: {  }
+field_type: datetime

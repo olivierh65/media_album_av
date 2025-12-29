@@ -1,0 +1,72 @@
+<?php
+
+/**
+ * @file
+ * File: media_album_av.install
+ *
+ *
+ */
+
+use Drupal\node\Entity\NodeType;
+use Drupal\field\Entity\FieldStorageConfig;
+use Drupal\field\Entity\FieldConfig;
+use Drupal\Core\Entity\Entity\EntityFormDisplay;
+use Drupal\Core\Entity\Entity\EntityViewDisplay;
+use Drupal\media\Entity\MediaType;
+use Drupal\taxonomy\Entity\Vocabulary;
+
+
+
+/**
+ * Implements hook_uninstall().
+ */
+function media_album_av_uninstall() {
+  // Optional cleanup when uninstalling
+  // Warning: this will delete all data!
+$delete=false;
+
+/*
+  $delete=true;
+  // Delete the content type
+  $content_type = NodeType::load('media_album_av');
+  if ($content_type) {
+    $content_type->delete();
+  }
+
+  // Delete the media types
+  $media_photo = MediaType::load('media_album_av_photo');
+  if ($media_photo) {
+    $media_photo->delete();
+  }
+
+  $media_video = MediaType::load('media_album_av_video');
+  if ($media_video) {
+    $media_video->delete();
+  }
+
+  // Delete the vocabulary
+  $vocab = Vocabulary::load('media_album_av_authors');
+  if ($vocab) {
+    $vocab->delete();
+  }
+  $vocab = Vocabulary::load('media_album_av_category');
+  if ($vocab) {
+    $vocab->delete();
+  }
+  $vocab = Vocabulary::load('media_album_av_event');
+  if ($vocab) {
+    $vocab->delete();
+  }
+  $vocab = Vocabulary::load('media_album_av_folders');
+  if ($vocab) {
+    $vocab->delete();
+  }
+*/
+
+  if ($delete) {
+      \Drupal::messenger()->addStatus(t('Module uninstalled. Created content is DELETED.'));
+  }
+  else {
+  \Drupal::messenger()->addStatus(t('Module uninstalled. Created content is preserved.'));
+  }
+}

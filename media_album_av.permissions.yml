@@ -1,0 +1,4 @@
+media_album_av.administer_settings:
+  title: 'Administer Media Album AV settings'
+  description: 'Access the Media Album AV configuration page'
+  restrict access: true

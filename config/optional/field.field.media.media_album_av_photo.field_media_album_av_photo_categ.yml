@@ -1,0 +1,31 @@
+uuid: 886e8175-5699-4b6e-99d4-709a5f1c98bd
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_photo_categ
+    - media.type.media_album_av_photo
+    - taxonomy.vocabulary.media_album_av_category
+_core:
+  default_config_hash: LmP4QXMBIGYAwhkpL56ajFqHO4ZdqVnrzYRRM2Bh_aU
+id: media.media_album_av_photo.field_media_album_av_photo_categ
+field_name: field_media_album_av_photo_categ
+entity_type: media
+bundle: media_album_av_photo
+label: Category
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:filter_existing_terms'
+  handler_settings:
+    target_bundles:
+      media_album_av_category: media_album_av_category
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

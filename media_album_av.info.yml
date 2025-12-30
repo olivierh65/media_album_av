@@ -16,3 +16,4 @@ dependencies:
   - drupal:image
   - drupal:file
   - drupal:text
+  - filefield_paths

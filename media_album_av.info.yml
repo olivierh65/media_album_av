@@ -17,3 +17,4 @@ dependencies:
   - drupal:file
   - drupal:text
   - filefield_paths
+  - readonly_field_widget

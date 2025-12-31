@@ -1,5 +1,4 @@
-uuid: fe2d9e53-ecae-46e8-8767-a23c5540011a
-langcode: fr
+langcode: en
 status: true
 dependencies:
   module:

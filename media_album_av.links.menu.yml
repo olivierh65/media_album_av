@@ -3,3 +3,8 @@ media_album_av.settings:
   description: 'Configure author fields for media types'
   parent: system.admin_config_media
   route_name: media_album_av.settings
+media_album_av.create_album:
+  title: 'Create Media Album'
+  description: 'Create a new media album'
+  parent: system.admin_content
+  route_name: media_album_av.create_album

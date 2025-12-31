@@ -1,0 +1,381 @@
+/**
+ * Media Album AV - Taxonomy Manager Modal Styling
+ */
+
+/* Modal Container - content inside jQuery-ui dialog */
+.taxonomy-manager-modal {
+  width: 100%;
+}
+  z-index: 10000;
+  display: flex;
+  flex-direction: column;
+  animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Modal Header */
+.modal-header {
+  padding: 20px;
+  border-bottom: 1px solid #e0e0e0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(135deg, #0066cc 0%, #003d7a 100%);
+  border-radius: 8px 8px 0 0;
+}
+
+.modal-title {
+  margin: 0;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.modal-close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.modal-close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.modal-close-btn:focus {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+/* Modal Body */
+.modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: grid;
+  grid-template-columns: 1fr 350px;
+  gap: 20px;
+}
+
+/* Tree Container */
+.taxonomy-tree-container {
+  background: #fafafa;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 15px;
+  overflow-y: auto;
+  max-height: 400px;
+}
+
+#taxonomy-tree {
+  font-size: 13px;
+}
+
+/* jsTree styling */
+#taxonomy-tree .jstree-default .jstree-node {
+  margin-left: 16px;
+}
+
+#taxonomy-tree .jstree-default .jstree-icon {
+  width: 16px;
+  height: 16px;
+}
+
+#taxonomy-tree .jstree-default .jstree-anchor {
+  padding-left: 4px;
+  font-size: 13px;
+}
+
+#taxonomy-tree .jstree-default .jstree-anchor:hover {
+  background-color: #e3f2fd;
+}
+
+#taxonomy-tree .jstree-default .jstree-anchor.jstree-clicked {
+  background-color: #bbdefb;
+  color: #0066cc;
+}
+
+#taxonomy-tree .jstree-default .jstree-wholerow-clicked {
+  background-color: #e3f2fd;
+}
+
+/* Add Term Form */
+.add-term-form {
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 15px;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.add-term-form h3 {
+  margin: 0 0 10px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
+.add-term-form .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.add-term-form label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #555;
+}
+
+.add-term-form .required {
+  color: #dc3545;
+  margin-left: 2px;
+}
+
+.add-term-form .form-control {
+  padding: 8px;
+  border: 1px solid #d0d0d0;
+  border-radius: 3px;
+  font-size: 12px;
+  font-family: inherit;
+}
+
+.add-term-form .form-control:focus {
+  border-color: #0066cc;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+.add-term-form textarea {
+  resize: vertical;
+  min-height: 60px;
+}
+
+.add-term-form .form-actions {
+  margin-top: auto;
+  padding-top: 10px;
+  border-top: 1px solid #e0e0e0;
+}
+
+.add-term-form .form-actions button {
+  width: 100%;
+  padding: 10px;
+  background-color: #0066cc;
+  color: white;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.add-term-form .form-actions button:hover {
+  background-color: #003d7a;
+}
+
+.add-term-form .form-actions button:active {
+  transform: scale(0.98);
+}
+
+/* Modal Footer */
+.modal-footer {
+  padding: 15px 20px;
+  border-top: 1px solid #e0e0e0;
+  text-align: right;
+  background: #f5f5f5;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background-color: #0066cc;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #003d7a;
+}
+
+.btn-secondary {
+  background-color: #e0e0e0;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #d0d0d0;
+}
+
+.btn:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Loading State */
+.taxonomy-tree-container.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #0066cc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Messages */
+.alert {
+  padding: 12px 15px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+.alert-success {
+  background-color: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+.alert-error {
+  background-color: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .taxonomy-manager-modal {
+    width: 95%;
+    max-width: none;
+    max-height: 95vh;
+  }
+
+  .modal-body {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .taxonomy-tree-container,
+  .add-term-form {
+    max-height: 300px;
+  }
+
+  .modal-title {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .modal-header {
+    padding: 15px;
+  }
+
+  .modal-body {
+    padding: 15px;
+  }
+
+  .modal-footer {
+    padding: 12px 15px;
+  }
+
+  .btn {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+
+/* Scrollbar Styling */
+.taxonomy-tree-container::-webkit-scrollbar,
+.add-term-form::-webkit-scrollbar {
+  width: 8px;
+}
+
+.taxonomy-tree-container::-webkit-scrollbar-track,
+.add-term-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.taxonomy-tree-container::-webkit-scrollbar-thumb,
+.add-term-form::-webkit-scrollbar-thumb {
+  background: #c0c0c0;
+  border-radius: 4px;
+}
+
+.taxonomy-tree-container::-webkit-scrollbar-thumb:hover,
+.add-term-form::-webkit-scrollbar-thumb:hover {
+  background: #a0a0a0;
+}
+/* jsTree Enhancements */
+
+/* Selected parent highlight in tree */
+.taxonomy-tree-container .jstree-node.selected-parent > .jstree-wholerow {
+  background-color: #e3f2fd !important;
+  border-left: 4px solid #0066cc;
+}
+
+/* jsTree node hover effect for drag indication */
+.taxonomy-tree-container .jstree-node:hover > .jstree-wholerow {
+  background-color: #f5f5f5;
+}
+
+/* jsTree drag over effect */
+.jstree-dnd-parent,
+.jstree-dnd-indicator {
+  background-color: #0066cc;
+  border-radius: 4px;
+}
+
+/* jsTree drag helper styling */
+.jstree-dnd {
+  background-color: #0066cc;
+  color: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+  opacity: 0.9;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}

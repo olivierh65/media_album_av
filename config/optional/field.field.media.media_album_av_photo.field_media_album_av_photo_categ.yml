@@ -1,4 +1,3 @@
-uuid: 886e8175-5699-4b6e-99d4-709a5f1c98bd
 langcode: fr
 status: true
 dependencies:
@@ -12,7 +11,7 @@ id: media.media_album_av_photo.field_media_album_av_photo_categ
 field_name: field_media_album_av_photo_categ
 entity_type: media
 bundle: media_album_av_photo
-label: Category
+label: Catégorie
 description: ''
 required: false
 translatable: false

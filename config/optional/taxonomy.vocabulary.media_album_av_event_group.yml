@@ -1,0 +1,10 @@
+langcode: fr
+status: true
+dependencies: {  }
+_core:
+  default_config_hash: y84_KyTrvIet7rfqlXQUsGwgXqq9jpgxcMwbirv5w54
+name: 'Media Album AV Event Group'
+vid: media_album_av_event_group
+description: 'Media events group'
+weight: 0
+new_revision: false

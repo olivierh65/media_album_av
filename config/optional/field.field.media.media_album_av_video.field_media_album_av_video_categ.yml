@@ -1,4 +1,3 @@
-uuid: b8bc9456-ee18-4fe2-9dcf-be1b7c5ff65c
 langcode: fr
 status: true
 dependencies:
@@ -12,7 +11,7 @@ id: media.media_album_av_video.field_media_album_av_video_categ
 field_name: field_media_album_av_video_categ
 entity_type: media
 bundle: media_album_av_video
-label: Category
+label: Catégorie
 description: ''
 required: false
 translatable: false

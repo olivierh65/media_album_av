@@ -1,18 +1,15 @@
-uuid: a3c0c3f4-e226-4de8-92a1-a35728519b49
 langcode: fr
 status: true
 dependencies:
   config:
     - field.storage.node.field_media_album_av_authors
     - node.type.media_album_av
-_core:
-  default_config_hash: 7LUm5vG1vTFcKOCTzn7HUNZZvCA0ox2a64-1itlmJgo
 id: node.media_album_av.field_media_album_av_authors
 field_name: field_media_album_av_authors
 entity_type: node
 bundle: media_album_av
 label: Authors
-description: 'List of authors, compiled based on media authors'
+description: "List of authors extracted from the album's media. Not editable."
 required: false
 translatable: false
 default_value: {  }

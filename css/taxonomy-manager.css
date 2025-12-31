@@ -1,0 +1,209 @@
+/**
+ * Media Album AV - Taxonomy Manager Styling
+ */
+
+/* Term Toggle Button */
+.term-toggle {
+  background: none;
+  border: none;
+  padding: 0 8px;
+  cursor: pointer;
+  font-size: 16px;
+  color: #0066cc;
+  font-weight: bold;
+  min-width: 24px;
+  text-align: center;
+  transition: color 0.2s ease;
+  line-height: 1;
+}
+
+.term-toggle:hover {
+  color: #003d7a;
+}
+
+.term-toggle:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* Draggable Terms */
+.term-item.dragging {
+  opacity: 0.5;
+  background-color: #e3f2fd;
+}
+
+.term-item.drop-target {
+  border: 2px dashed #0066cc;
+  background-color: #f0f7ff;
+}
+
+/* Term Level Indicators */
+.term-item .term-level {
+  display: inline-block;
+  padding: 2px 6px;
+  background-color: #f0f0f0;
+  border-radius: 3px;
+  font-size: 11px;
+  margin-left: 8px;
+  color: #666;
+}
+
+/* Tree with Lines */
+.term-list .term-list::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: -10px;
+  bottom: 0;
+  width: 1px;
+  background-color: #ddd;
+}
+
+/* Status Indicators */
+.term-status {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+.term-status.published {
+  background-color: #28a745;
+}
+
+.term-status.unpublished {
+  background-color: #dc3545;
+}
+
+/* Term Description Preview */
+.term-description-preview {
+  font-size: 12px;
+  color: #666;
+  font-style: italic;
+  margin-top: 4px;
+  padding: 4px 8px;
+  background-color: #f9f9f9;
+  border-left: 2px solid #ccc;
+  display: none;
+}
+
+.term-item:hover .term-description-preview {
+  display: block;
+}
+
+/* Expanded Hierarchy */
+.taxonomy-tree .term-list .term-list {
+  margin-left: 40px;
+}
+
+.taxonomy-tree .term-list .term-list .term-list {
+  margin-left: 40px;
+}
+
+/* Breadcrumb Navigation */
+.taxonomy-breadcrumb {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 15px;
+  font-size: 12px;
+}
+
+.taxonomy-breadcrumb > span:not(:last-child)::after {
+  content: '/';
+  margin-left: 5px;
+  color: #999;
+}
+
+/* Search/Filter in Taxonomy */
+.taxonomy-filter {
+  margin-bottom: 15px;
+}
+
+.taxonomy-filter input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #d3d3d3;
+  border-radius: 3px;
+  font-size: 14px;
+}
+
+.taxonomy-filter input:focus {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 3px rgba(0, 102, 204, 0.1);
+}
+
+/* Highlight matching terms */
+.term-item.search-match {
+  background-color: #fffacd;
+  border-color: #f0e68c;
+}
+
+.term-item.search-no-match {
+  display: none;
+}
+
+/* Loading State */
+.taxonomy-tree.loading::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #0066cc;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Empty State */
+.taxonomy-tree.empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: #999;
+}
+
+.taxonomy-tree.empty p {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Accessibility */
+.term-item button:focus-visible,
+.term-item a:focus-visible {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Mobile Adjustments */
+@media (max-width: 600px) {
+  .term-actions {
+    flex-direction: column;
+  }
+
+  .term-actions .button {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .term-list .term-list {
+    margin-left: 15px;
+  }
+
+  .taxonomy-breadcrumb {
+    flex-wrap: wrap;
+  }
+}

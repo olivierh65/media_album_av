@@ -5,3 +5,78 @@ media_album_av.settings:
     _title: 'Media Album AV Settings'
   requirements:
     _permission: 'media_album_av.administer_settings'
+
+media_album_av.create_album:
+  path: '/admin/content/media-album/create'
+  defaults:
+    _form: '\Drupal\media_album_av\Form\CreateAlbumForm'
+    _title: 'Create Media Album'
+  requirements:
+    _permission: 'create media_album_av content'
+
+media_album_av.taxonomy_manager:
+  path: '/admin/content/media-album/taxonomy/{vocabulary_id}'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::modal'
+    _title: 'Manage Taxonomy'
+  requirements:
+    _permission: 'create media_album_av content'
+    vocabulary_id: '[a-z_]+'
+
+media_album_av.taxonomy_manager_content:
+  path: '/admin/content/media-album/taxonomy/{vocabulary_id}/content'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::modalContent'
+  requirements:
+    _permission: 'create media_album_av content'
+    vocabulary_id: '[a-z_]+'
+    _method: 'GET'
+media_album_av.taxonomy_manager_move_term:
+  path: '/admin/content/media-album/taxonomy/move-term'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::moveTerm'
+  requirements:
+    _permission: 'create media_album_av content'
+    _method: 'POST'
+
+media_album_av.taxonomy_manager_delete_term:
+  path: '/admin/content/media-album/taxonomy/delete-term'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::deleteTerm'
+  requirements:
+    _permission: 'create media_album_av content'
+    _method: 'POST'
+media_album_av.taxonomy_manager_api:
+  path: '/admin/content/media-album/taxonomy/{vocabulary_id}/api'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::getTreeJson'
+  requirements:
+    _permission: 'create media_album_av content'
+    vocabulary_id: '[a-z_]+'
+    _method: 'GET'
+
+media_album_av.taxonomy_manager_add_term:
+  path: '/admin/content/media-album/taxonomy/{vocabulary_id}/add-term'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::addTerm'
+  requirements:
+    _permission: 'create media_album_av content'
+    vocabulary_id: '[a-z_]+'
+    _method: 'POST'
+
+media_album_av.taxonomy_manager_update_term:
+  path: '/admin/content/media-album/taxonomy/update-term'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::updateTerm'
+  requirements:
+    _permission: 'create media_album_av content'
+    _method: 'POST'
+
+media_album_av.taxonomy_manager_get_term:
+  path: '/admin/content/media-album/taxonomy/get-term/{term_id}'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::getTerm'
+  requirements:
+    _permission: 'create media_album_av content'
+    term_id: '\d+'
+    _method: 'GET'

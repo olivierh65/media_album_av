@@ -1,0 +1,56 @@
+album-forms:
+  css:
+    theme:
+      css/album-forms.css: {}
+  dependencies:
+    - core/drupal
+    - core/drupal.ajax
+    - core/drupal.dialog.ajax
+    - core/jquery.ui.dialog
+    - media_album_av/taxonomy-manager-modal
+
+taxonomy-manager:
+  css:
+    theme:
+      css/taxonomy-manager.css: {}
+  js:
+    js/taxonomy-manager.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+
+jstree:
+  license: MIT
+  css:
+    component:
+      'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css': { type: external, external: true, minified: true }
+  js:
+    'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js': { type: external, external: true, minified: true }
+  dependencies:
+    - core/jquery
+
+taxonomy-manager-modal:
+  css:
+    theme:
+      css/taxonomy-manager-modal.css: {}
+  js:
+    js/taxonomy-manager-modal.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - media_album_av/jstree
+
+taxonomy-manager-inline:
+  css:
+    theme:
+      css/taxonomy-manager-inline.css: {}
+  js:
+    js/taxonomy-manager-inline.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
+    - media_album_av/jstree
+

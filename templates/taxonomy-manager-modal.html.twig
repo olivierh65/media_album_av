@@ -1,0 +1,65 @@
+{#
+/**
+ * @file
+ * Template for Taxonomy Manager modal.
+ */
+#}
+
+<div class="taxonomy-manager-modal" data-vocabulary-id="{{ vocabulary_id }}">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2 class="modal-title">
+        {{ 'Manage'|t }}: {{ vocabulary_label }}
+      </h2>
+    </div>
+
+    <div class="modal-body">
+      <!-- Tree Container -->
+      <div class="taxonomy-tree-container">
+        <div id="taxonomy-tree"></div>
+      </div>
+
+      <!-- Add Term Form -->
+      <div class="add-term-form">
+        <h3>{{ 'Add New Term'|t }}</h3>
+
+        <div class="form-group">
+          <label for="term-name">{{ 'Term Name'|t }} <span class="required">*</span></label>
+          <input
+            type="text"
+            id="term-name"
+            class="form-control"
+            placeholder="{{ 'Enter term name'|t }}"
+            required
+          />
+        </div>
+
+        <div class="form-group">
+          <label for="term-description">{{ 'Description'|t }}</label>
+          <textarea
+            id="term-description"
+            class="form-control"
+            rows="3"
+            placeholder="{{ 'Optional description'|t }}"
+          ></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="term-parent">{{ 'Parent Term'|t }}</label>
+          <select id="term-parent" class="form-control">
+            <option value="">{{ '- Root (No parent) -'|t }}</option>
+          </select>
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-primary" id="add-term-btn">
+            {{ 'Add Term'|t }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+    </div>
+  </div>
+</div>

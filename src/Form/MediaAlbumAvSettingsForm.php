@@ -73,13 +73,20 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
 
     $form['#tree'] = TRUE;
 
+    // Create vertical tabs container.
+    $form['tabs'] = [
+      '#type' => 'vertical_tabs',
+      '#default_tab' => 'edit-global',
+    ];
+
     // ==========================================
     // 1. CONFIGURATION GLOBALE
     // ==========================================
     $form['global'] = [
-      '#type' => 'fieldset',
+      '#type' => 'details',
       '#title' => $this->t('Global Settings'),
-      '#collapsible' => FALSE,
+      '#group' => 'tabs',
+      '#open' => TRUE,
     ];
 
     $form['global']['description'] = [
@@ -87,7 +94,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#markup' => '<p>' . $this->t('Configure author field mapping for media types.') . '</p>',
     ];
 
-    // Get available fields for the node that can store authors
+    // Get available fields for the node that can store authors.
     $node_author_field = $this->getNodeAuthorFields();
 
     $form['global']['node_authors_field'] = [
@@ -95,14 +102,69 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Node Authors Field'),
       '#description' => $this->t('Select which field in the node will be populated with the authors from media.'),
       '#options' => $node_author_field,
-      '#default_value' => $config->get('node_authors_field') ?? '',
+      '#default_value' => $config->get('node_authors_field') ?? 'field_media_album_av_authors',
       '#required' => TRUE,
+    ];
+
+    // ==========================================
+    // 1b. ALBUM CREATION SETTINGS
+    // ==========================================
+    $form['album'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Album Creation Settings'),
+      '#group' => 'tabs',
+      '#open' => FALSE,
+    ];
+
+    $form['album']['description'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . $this->t('Configure the content type and taxonomies to use for album creation.') . '</p>',
+    ];
+
+    // Get available content types.
+    $content_types = $this->getContentTypes();
+
+    $form['album']['album_content_type'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Album Content Type'),
+      '#description' => $this->t('Select the content type to use for creating new albums.'),
+      '#options' => $content_types,
+      '#default_value' => $config->get('album_content_type') ?? 'media_album_av',
+      '#required' => TRUE,
+    ];
+
+    // Get available vocabularies.
+    $vocabularies = $this->getVocabularies();
+
+    $form['album']['event_group_vocabulary'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Event Group Vocabulary'),
+      '#description' => $this->t('Select the taxonomy vocabulary to use for Event Group (optional).'),
+      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
+      '#default_value' => $config->get('event_group_vocabulary') ?? 'media_album_av_event_group',
+      '#required' => FALSE,
+    ];
+
+    $form['album']['event_vocabulary'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Event Vocabulary'),
+      '#description' => $this->t('Select the taxonomy vocabulary to use for Event (optional).'),
+      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
+      '#default_value' => $config->get('event_vocabulary') ?? 'media_album_av_event',
+      '#required' => FALSE,
     ];
 
     // ==========================================
     // 2. CONFIGURATION PAR TYPE DE MÉDIA
     // ==========================================
-    $form['description'] = [
+    $form['media_authors'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Media Type Author Fields'),
+      '#group' => 'tabs',
+      '#open' => FALSE,
+    ];
+
+    $form['media_authors']['description'] = [
       '#type' => 'markup',
       '#markup' => '<p>' . $this->t('Configure which field should be used as "Author" for each media type.') . '</p>',
     ];
@@ -111,7 +173,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $accepted_bundles = $this->getAcceptedMediaBundles();
 
     if (empty($accepted_bundles)) {
-      $form['no_media_types'] = [
+      $form['media_authors']['no_media_types'] = [
         '#type' => 'markup',
         '#markup' => '<p>' . $this->t('No media types are configured for this content type.') . '</p>',
       ];
@@ -132,20 +194,19 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     }
 
     if (empty($media_types_options)) {
-      $form['no_media_types'] = [
+      $form['media_authors']['no_media_types'] = [
         '#type' => 'markup',
         '#markup' => '<p>' . $this->t('No media types available.') . '</p>',
       ];
       return $form;
     }
 
-    // Create fieldset for each media type.
+    // Create fieldset for each media type inside the media_authors tab.
     foreach ($media_types_options as $media_type_id => $media_type_label) {
-      $form['author_fields'][$media_type_id] = [
-        '#type' => 'fieldset',
+      $form['media_authors']['author_fields_' . $media_type_id] = [
+        '#type' => 'details',
         '#title' => $this->t('Author field for @media_type', ['@media_type' => $media_type_label]),
-        '#collapsible' => TRUE,
-        '#collapsed' => FALSE,
+        '#open' => FALSE,
       ];
 
       // Get available fields for this media type.
@@ -162,7 +223,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       }
 
       if (empty($field_options)) {
-        $form['author_fields'][$media_type_id]['no_fields'] = [
+        $form['media_authors']['author_fields_' . $media_type_id]['no_fields'] = [
           '#type' => 'markup',
           '#markup' => '<p>' . $this->t('No suitable fields found for this media type.') . '</p>',
         ];
@@ -170,16 +231,34 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       }
 
       // Add select field for author field selection.
-      $form['author_fields'][$media_type_id]['field_name'] = [
+      $form['media_authors']['author_fields_' . $media_type_id]['field_name'] = [
         '#type' => 'select',
         '#title' => $this->t('Select author field'),
         '#options' => ['' => $this->t('- None -')] + $field_options,
-        '#default_value' => $config->get('author_fields.' . $media_type_id) ?? '',
+        '#default_value' => $config->get('author_fields.' . $media_type_id) ?? $this->getDefaultAuthorField($media_type_id),
         '#description' => $this->t('Select the field to use as author for this media type.'),
       ];
     }
 
     return parent::buildForm($form, $form_state);
+  }
+
+  /**
+   * Get default author field for a media type.
+   *
+   * @param string $media_type_id
+   *   The media type ID.
+   *
+   * @return string
+   *   The default author field name, or empty string if none.
+   */
+  private function getDefaultAuthorField($media_type_id) {
+    $defaults = [
+      'media_album_av_photo' => 'field_media_album_av_photo_autho',
+      'media_album_av_video' => 'field_media_album_av_video_autho',
+    ];
+
+    return $defaults[$media_type_id] ?? '';
   }
 
   /**
@@ -194,7 +273,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $field_options = [];
 
     foreach ($node_fields as $field_name => $field_def) {
-      // Only offer string and text fields
+      // Only offer string and text fields.
       if ($field_def->getType() === 'string' ||
           $field_def->getType() === 'string_long' ||
           $field_def->getType() === 'text' ||
@@ -243,8 +322,13 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config = $this->config('media_album_av.settings');
     $values = $form_state->getValues();
 
-    // Save the node authors field selection
+    // Save the node authors field selection.
     $config->set('node_authors_field', $values['global']['node_authors_field']);
+
+    // Save album settings.
+    $config->set('album_content_type', $values['album']['album_content_type']);
+    $config->set('event_group_vocabulary', $values['album']['event_group_vocabulary']);
+    $config->set('event_vocabulary', $values['album']['event_vocabulary']);
 
     // Extract the author_fields from the nested structure.
     $author_fields = $values['author_fields'] ?? [];
@@ -260,6 +344,40 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('author_fields', $cleaned_author_fields)->save();
 
     parent::submitForm($form, $form_state);
+  }
+
+  /**
+   * Get available content types.
+   *
+   * @return array
+   *   Array of content type options.
+   */
+  private function getContentTypes() {
+    $options = [];
+    $content_types = $this->entityTypeManager->getStorage('node_type')->loadMultiple();
+
+    foreach ($content_types as $type) {
+      $options[$type->id()] = $type->label();
+    }
+
+    return $options;
+  }
+
+  /**
+   * Get available vocabularies.
+   *
+   * @return array
+   *   Array of vocabulary options.
+   */
+  private function getVocabularies() {
+    $options = [];
+    $vocabularies = $this->entityTypeManager->getStorage('taxonomy_vocabulary')->loadMultiple();
+
+    foreach ($vocabularies as $vocab) {
+      $options[$vocab->id()] = $vocab->label();
+    }
+
+    return $options;
   }
 
 }

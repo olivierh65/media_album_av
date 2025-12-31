@@ -1,0 +1,28 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.node.field_media_album_av_event_group
+    - node.type.media_album_av
+    - taxonomy.vocabulary.media_album_av_event_group
+id: node.media_album_av.field_media_album_av_event_group
+field_name: field_media_album_av_event_group
+entity_type: node
+bundle: media_album_av
+label: 'Event Group'
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  handler: 'default:filter_existing_terms'
+  handler_settings:
+    target_bundles:
+      media_album_av_event_group: media_album_av_event_group
+    sort:
+      field: name
+      direction: asc
+    auto_create: true
+    auto_create_bundle: ''
+field_type: entity_reference

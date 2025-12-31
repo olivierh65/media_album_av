@@ -27,6 +27,13 @@ function media_album_av_theme() {
       'variables' => ['items' => []],
       'template' => 'media-album-av-gallery',
     ],
+    'taxonomy_manager_modal' => [
+      'variables' => [
+        'vocabulary_id' => NULL,
+        'vocabulary_label' => '',
+      ],
+      'template' => 'taxonomy-manager-modal',
+    ],
   ];
 }
 

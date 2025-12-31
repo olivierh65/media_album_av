@@ -1,5 +1,4 @@
-uuid: ccd23db5-eda7-4895-8453-3769c2b29114
-langcode: fr
+langcode: en
 status: true
 dependencies:
   config:
@@ -7,6 +6,7 @@ dependencies:
     - field.field.node.media_album_av.field_media_album_av_date
     - field.field.node.media_album_av.field_media_album_av_description
     - field.field.node.media_album_av.field_media_album_av_event
+    - field.field.node.media_album_av.field_media_album_av_event_group
     - field.field.node.media_album_av.field_media_album_av_media
     - node.type.media_album_av
   module:
@@ -25,7 +25,7 @@ content:
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 106
+    weight: 4
     region: content
   field_media_album_av_date:
     type: datetime_default
@@ -34,14 +34,14 @@ content:
       timezone_override: ''
       format_type: medium
     third_party_settings: {  }
-    weight: 107
+    weight: 1
     region: content
   field_media_album_av_description:
     type: text_default
     label: above
     settings: {  }
     third_party_settings: {  }
-    weight: 103
+    weight: 0
     region: content
   field_media_album_av_event:
     type: entity_reference_label
@@ -49,7 +49,15 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 104
+    weight: 3
+    region: content
+  field_media_album_av_event_group:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 2
     region: content
   field_media_album_av_media:
     type: entity_reference_label
@@ -57,15 +65,11 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 108
-    region: content
-  links:
-    settings: {  }
-    third_party_settings: {  }
-    weight: 100
+    weight: 5
     region: content
 hidden:
   entity_print_view_epub: true
   entity_print_view_pdf: true
   entity_print_view_word_docx: true
   langcode: true
+  links: true

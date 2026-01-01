@@ -186,7 +186,7 @@
    *   The vocabulary label.
    */
   function initializeTaxonomyTree(container, vocabularyId, vocabularyLabel) {
-    const apiUrl = '/admin/content/media-album/taxonomy/' + vocabularyId + '/api';
+    const apiUrl = '/admin/content/media-album/taxonomy/' + vocabularyId + '/api';  // Keep for media_album_av specific modal
     
     // Find the corresponding hidden field within the parent form element
     let selectedField = null;
@@ -369,7 +369,7 @@
 
           // Save the new parent and weights to server
           $.ajax({
-            url: '/admin/content/media-album/taxonomy/move-term',
+            url: '/admin/taxonomy-service/directory/move-term',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -586,7 +586,7 @@
   function addTerm(name, description, parentId, vocabularyId, treeContainer, modal) {
     // Calculate weight based on sibling count
     const weight = calculateTermWeight(treeContainer, parentId || 0);
-    const url = '/admin/content/media-album/taxonomy/' + vocabularyId + '/add-term';
+    const url = '/admin/taxonomy-service/directory/create-term';
 
     $.ajax({
       url: url,
@@ -633,7 +633,7 @@
    *   The modal element.
    */
   function updateTerm(termId, name, description, treeContainer, vocabularyId, modal) {
-    const url = '/admin/content/media-album/taxonomy/update-term';
+    const url = '/admin/taxonomy-service/directory/update-term';
 
     $.ajax({
       url: url,
@@ -673,7 +673,7 @@
    *   The vocabulary ID.
    */
   function deleteTerm(termId, treeContainer, vocabularyId) {
-    const url = '/admin/content/media-album/taxonomy/delete-term';
+    const url = '/admin/taxonomy-service/directory/delete-term';
 
     $.ajax({
       url: url,
@@ -709,7 +709,7 @@
    */
   function loadTermData(termId, callback) {
     $.ajax({
-      url: '/admin/content/media-album/taxonomy/get-term/' + termId,
+      url: '/admin/taxonomy-service/directory/get-term/' + termId,
       type: 'GET',
       dataType: 'json',
       success: function (response) {

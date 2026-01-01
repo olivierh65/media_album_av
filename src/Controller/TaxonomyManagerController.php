@@ -5,7 +5,7 @@ namespace Drupal\media_album_av\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\media_album_av\Service\AlbumConfigService;
-use Drupal\taxonomy\Entity\Term;
+use Drupal\media_taxonomy_service\Service\DirectoryService;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -31,16 +31,30 @@ class TaxonomyManagerController extends ControllerBase {
   protected $albumConfig;
 
   /**
+   * The directory service (from media_taxonomy_service).
+   *
+   * @var \Drupal\media_taxonomy_service\Service\DirectoryService
+   */
+  protected $directoryService;
+
+  /**
    * Constructs a TaxonomyManagerController object.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
    *   The entity type manager.
    * @param \Drupal\media_album_av\Service\AlbumConfigService $album_config
    *   The album config service.
+   * @param \Drupal\media_taxonomy_service\Service\DirectoryService $directory_service
+   *   The directory service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, AlbumConfigService $album_config) {
+  public function __construct(
+    EntityTypeManagerInterface $entity_type_manager,
+    AlbumConfigService $album_config,
+    DirectoryService $directory_service,
+  ) {
     $this->entityTypeManager = $entity_type_manager;
     $this->albumConfig = $album_config;
+    $this->directoryService = $directory_service;
   }
 
   /**
@@ -49,7 +63,8 @@ class TaxonomyManagerController extends ControllerBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('entity_type.manager'),
-      $container->get('media_album_av.album_config')
+      $container->get('media_album_av.album_config'),
+      $container->get('media_taxonomy_service.directory_service')
     );
   }
 
@@ -105,13 +120,8 @@ class TaxonomyManagerController extends ControllerBase {
         return new JsonResponse(['error' => 'Vocabulary not found'], 404);
       }
 
-      // Load terms.
-      $terms = $this->entityTypeManager
-        ->getStorage('taxonomy_term')
-        ->loadByProperties(['vid' => $vocabulary_id]);
-
-      // Build tree structure for jsTree.
-      $tree = $this->buildTreeForJsTree($terms);
+      // Use DirectoryService to build tree structure.
+      $tree = $this->directoryService->getDirectoryTreeData($vocabulary_id, NULL);
 
       return new JsonResponse($tree);
     }
@@ -119,78 +129,6 @@ class TaxonomyManagerController extends ControllerBase {
       return new JsonResponse([
         'error' => $e->getMessage(),
       ], 400);
-    }
-  }
-
-  /**
-   * Build tree structure for jsTree library.
-   *
-   * @param array $terms
-   *   Array of taxonomy terms.
-   *
-   * @return array
-   *   Tree data for jsTree.
-   */
-  private function buildTreeForJsTree(array $terms) {
-    $tree_data = [];
-    $by_id = [];
-
-    // Build ID map.
-    foreach ($terms as $term) {
-      $by_id[$term->id()] = [
-        'id' => 'node_' . $term->id(),
-        'text' => $term->getName(),
-        'data' => [
-          'term_id' => $term->id(),
-          'description' => $term->getDescription(),
-          'weight' => (int) $term->getWeight(),
-        ],
-        'children' => [],
-      ];
-    }
-
-    // Build hierarchy and sort by weight.
-    foreach ($terms as $term) {
-      $parent_id = 0;
-      if ($term->parent && !empty($term->parent->target_id)) {
-        $parent_id = $term->parent->target_id;
-      }
-
-      if ($parent_id === 0 || !isset($by_id[$parent_id])) {
-        // Root node.
-        $tree_data[] = &$by_id[$term->id()];
-      }
-      else {
-        // Child node.
-        $by_id[$parent_id]['children'][] = &$by_id[$term->id()];
-      }
-    }
-
-    // Sort all levels by weight.
-    $this->sortTreeByWeight($tree_data);
-
-    return $tree_data;
-  }
-
-  /**
-   * Sort tree nodes by weight recursively.
-   *
-   * @param array &$tree_data
-   *   Reference to tree data to sort.
-   */
-  private function sortTreeByWeight(array &$tree_data) {
-    // Sort current level by weight.
-    usort($tree_data, function ($a, $b) {
-      $weight_a = $a['data']['weight'] ?? 0;
-      $weight_b = $b['data']['weight'] ?? 0;
-      return $weight_a - $weight_b;
-    });
-
-    // Sort children recursively.
-    foreach ($tree_data as &$node) {
-      if (!empty($node['children'])) {
-        $this->sortTreeByWeight($node['children']);
-      }
     }
   }
 
@@ -257,21 +195,17 @@ class TaxonomyManagerController extends ControllerBase {
         ], 400);
       }
 
-      // Create term.
-      $term = Term::create([
-        'vid' => $vocabulary_id,
-        'name' => $data['name'],
-        'description' => $data['description'] ?? '',
-        'parent' => $data['parent'] ?? 0,
-        'weight' => isset($data['weight']) ? (int) $data['weight'] : 0,
-      ]);
-
-      $term->save();
+      // Use DirectoryService to create term.
+      $term_id = $this->directoryService->createDirectoryTerm(
+        $vocabulary_id,
+        $data['name'],
+        $data['parent'] ?? 0
+      );
 
       return new JsonResponse([
         'success' => TRUE,
-        'id' => 'node_' . $term->id(),
-        'term_id' => $term->id(),
+        'id' => 'node_' . $term_id,
+        'term_id' => $term_id,
         'message' => $this->t('Term "@term" created successfully.', [
           '@term' => $data['name'],
         ]),
@@ -303,25 +237,8 @@ class TaxonomyManagerController extends ControllerBase {
         ], 400);
       }
 
-      $term = Term::load($data['term_id']);
-      if (!$term) {
-        return new JsonResponse(['error' => 'Term not found'], 404);
-      }
-
-      // Update parent.
-      $term->set('parent', $data['parent_id']);
-      $term->save();
-
-      // Update weights for all terms if provided.
-      if (!empty($data['weights']) && is_array($data['weights'])) {
-        foreach ($data['weights'] as $term_id => $weight) {
-          $t = Term::load($term_id);
-          if ($t) {
-            $t->set('weight', (int) $weight);
-            $t->save();
-          }
-        }
-      }
+      // Use DirectoryService to move term.
+      $this->directoryService->moveDirectoryTerm($data['term_id'], $data['parent_id']);
 
       return new JsonResponse([
         'success' => TRUE,
@@ -354,19 +271,12 @@ class TaxonomyManagerController extends ControllerBase {
         ], 400);
       }
 
-      $term = Term::load($data['term_id']);
-      if (!$term) {
-        return new JsonResponse(['error' => 'Term not found'], 404);
-      }
-
-      $term_name = $term->label();
-      $term->delete();
+      // Use DirectoryService to delete term.
+      $this->directoryService->deleteDirectoryTerm($data['term_id']);
 
       return new JsonResponse([
         'success' => TRUE,
-        'message' => $this->t('Term "@term" deleted successfully.', [
-          '@term' => $term_name,
-        ]),
+        'message' => $this->t('Term deleted successfully.'),
       ]);
     }
     catch (\Exception $e) {

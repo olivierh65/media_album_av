@@ -20,16 +20,6 @@ taxonomy-manager:
     - core/jquery
     - core/once
 
-jstree:
-  license: MIT
-  css:
-    component:
-      'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/themes/default/style.min.css': { type: external, external: true, minified: true }
-  js:
-    'https://cdnjs.cloudflare.com/ajax/libs/jstree/3.3.12/jstree.min.js': { type: external, external: true, minified: true }
-  dependencies:
-    - core/jquery
-
 taxonomy-manager-modal:
   css:
     theme:
@@ -40,7 +30,7 @@ taxonomy-manager-modal:
     - core/drupal
     - core/jquery
     - core/once
-    - media_album_av/jstree
+    - media_taxonomy_service/jstree
 
 taxonomy-manager-inline:
   css:
@@ -52,5 +42,6 @@ taxonomy-manager-inline:
     - core/drupal
     - core/jquery
     - core/once
-    - media_album_av/jstree
+    - media_taxonomy_service/jstree
+
 

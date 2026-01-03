@@ -5,7 +5,7 @@ dependencies:
     - field.field.media.media_album_av_video.field_media_album_av_video_autho
     - field.field.media.media_album_av_video.field_media_album_av_video_categ
     - field.field.media.media_album_av_video.field_media_album_av_video_descr
-    - field.field.media.media_album_av_video.field_media_video_file_1
+    - field.field.media.media_album_av_video.field_media_album_av_video
     - media.type.media_album_av_video
   module:
     - file
@@ -62,7 +62,7 @@ content:
       rows: 5
       placeholder: ''
     third_party_settings: {  }
-  field_media_video_file_1:
+  field_media_album_av_video:
     type: file_generic
     weight: 0
     region: content

@@ -2,7 +2,7 @@ langcode: fr
 status: true
 dependencies:
   config:
-    - field.storage.media.field_media_video_file_1
+    - field.storage.media.field_media_album_av_video
     - media.type.media_album_av_video
   module:
     - file
@@ -28,8 +28,8 @@ third_party_settings:
     active_updating: false
 _core:
   default_config_hash: IK9sDFh6jrI5lH2o8JhotD0DxOP-1pIPNEVUp7_MLjo
-id: media.media_album_av_video.field_media_video_file_1
-field_name: field_media_video_file_1
+id: media.media_album_av_video.field_media_album_av_video
+field_name: field_media_album_av_video
 entity_type: media
 bundle: media_album_av_video
 label: 'Video file'

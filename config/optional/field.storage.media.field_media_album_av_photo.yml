@@ -5,8 +5,8 @@ dependencies:
     - file
     - image
     - media
-id: media.field_media_image_1
-field_name: field_media_image_1
+id: media.field_media_album_av_photo
+field_name: field_media_album_av_photo
 entity_type: media
 type: image
 settings:

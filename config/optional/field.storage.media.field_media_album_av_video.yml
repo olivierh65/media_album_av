@@ -4,8 +4,8 @@ dependencies:
   module:
     - file
     - media
-id: media.field_media_video_file_1
-field_name: field_media_video_file_1
+id: media.field_media_album_av_video
+field_name: field_media_album_av_video
 entity_type: media
 type: file
 settings:

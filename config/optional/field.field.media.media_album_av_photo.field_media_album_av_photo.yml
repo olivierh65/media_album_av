@@ -2,7 +2,7 @@ langcode: fr
 status: true
 dependencies:
   config:
-    - field.storage.media.field_media_image_1
+    - field.storage.media.field_media_album_av_photo
     - media.type.media_album_av_photo
   module:
     - filefield_paths
@@ -28,8 +28,8 @@ third_party_settings:
     active_updating: false
 _core:
   default_config_hash: iScIWrYXpIzQU1uSHtBv_d28bwknaOzZRXckHsxe5PA
-id: media.media_album_av_photo.field_media_image_1
-field_name: field_media_image_1
+id: media.media_album_av_photo.field_media_album_av_photo
+field_name: field_media_album_av_photo
 entity_type: media
 bundle: media_album_av_photo
 label: Image

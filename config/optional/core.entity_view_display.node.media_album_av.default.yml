@@ -11,6 +11,7 @@ dependencies:
     - node.type.media_album_av
   module:
     - datetime
+    - lightgallery
     - text
     - user
 _core:
@@ -60,10 +61,15 @@ content:
     weight: 2
     region: content
   field_media_album_av_media:
-    type: entity_reference_label
+    type: media_lightgallery_thumbnail
     label: above
     settings:
-      link: true
+      inline: false
+      thumbnail_image_style: null
+      thumbnail_loading: lazy
+      gallery_image_style: null
+      custom_settings: {  }
+      caption_view_mode: null
     third_party_settings: {  }
     weight: 5
     region: content

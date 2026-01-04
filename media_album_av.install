@@ -18,6 +18,33 @@ use Drupal\taxonomy\Entity\Vocabulary;
 
 
 /**
+ * Implements hook_install().
+ */
+function media_album_av_install() {
+  // Désactiver filefield_paths pour les entités créées si le module existe et est actif
+  if (\Drupal::moduleHandler()->moduleExists('filefield_paths')) {
+    // Désactiver filefield_paths pour les champs de photo et vidéo
+    $field_configs = [
+      'media.media_album_av_photo.field_media_album_av_photo',
+      'media.media_album_av_video.field_media_album_av_video',
+    ];
+
+    foreach ($field_configs as $field_config_id) {
+      $field_config = \Drupal\field\Entity\FieldConfig::load($field_config_id);
+      if ($field_config) {
+        // Vérifier si l'attribut enabled est présent et le passer à false
+        $filefield_paths_settings = $field_config->getThirdPartySetting('filefield_paths', 'enabled');
+        if ($filefield_paths_settings !== NULL) {
+          $field_config->setThirdPartySetting('filefield_paths', 'enabled', false);
+          $field_config->save();
+          \Drupal::messenger()->addStatus(t('Filefield Paths disabled for @field_id', ['@field_id' => $field_config_id]));
+        }
+      }
+    }
+  }
+}
+
+/**
  * Implements hook_uninstall().
  */
 function media_album_av_uninstall() {

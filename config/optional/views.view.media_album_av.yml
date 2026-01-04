@@ -1,3 +1,4 @@
+langcode: fr
 status: true
 dependencies:
   config:

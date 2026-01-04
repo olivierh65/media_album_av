@@ -13,7 +13,7 @@ settings:
   target_type: file
   display_field: false
   display_default: true
-  uri_scheme: public
+  uri_scheme: private
   default_image:
     uuid: ''
     alt: ''

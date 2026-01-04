@@ -12,7 +12,7 @@ dependencies:
     - node.type.media_album_av
   module:
     - datetime
-    - entity_browser
+    - media_attributes_manager
     - text
 _core:
   default_config_hash: qM_C0yDLSX8YIh7eX67ggOyACzV_ow6EUdahnqBLlU8
@@ -66,8 +66,8 @@ content:
       placeholder: ''
     third_party_settings: {  }
   field_media_album_av_media:
-    type: entity_browser_entity_reference
-    weight: 6
+    type: media_attributes_widget
+    weight: 26
     region: content
     settings:
       entity_browser: media_directories_modal

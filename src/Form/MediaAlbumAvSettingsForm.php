@@ -154,6 +154,28 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#required' => FALSE,
     ];
 
+    // Get available media types by category.
+    $photo_media_types = $this->getMediaTypesByCategory('image');
+    $video_media_types = $this->getMediaTypesByCategory('video');
+
+    $form['album']['prefered_media_type_photo'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Preferred Media Type for Photos'),
+      '#description' => $this->t('Select the default media type to use for uploaded photos/images.'),
+      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $photo_media_types,
+      '#default_value' => $config->get('prefered_media_type_photo') ?? '',
+      '#required' => FALSE,
+    ];
+
+    $form['album']['prefered_media_type_video'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Preferred Media Type for Videos'),
+      '#description' => $this->t('Select the default media type to use for uploaded videos.'),
+      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $video_media_types,
+      '#default_value' => $config->get('prefered_media_type_video') ?? '',
+      '#required' => FALSE,
+    ];
+
     // ==========================================
     // 2. CONFIGURATION PAR TYPE DE MÉDIA
     // ==========================================
@@ -329,6 +351,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('album_content_type', $values['album']['album_content_type']);
     $config->set('event_group_vocabulary', $values['album']['event_group_vocabulary']);
     $config->set('event_vocabulary', $values['album']['event_vocabulary']);
+    $config->set('prefered_media_type_photo', $values['album']['prefered_media_type_photo']);
+    $config->set('prefered_media_type_video', $values['album']['prefered_media_type_video']);
 
     // Extract the author_fields from the nested structure.
     $author_fields = $values['author_fields'] ?? [];
@@ -375,6 +399,39 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
 
     foreach ($vocabularies as $vocab) {
       $options[$vocab->id()] = $vocab->label();
+    }
+
+    return $options;
+  }
+
+  /**
+   * Get media types filtered by MIME type category.
+   *
+   * @param string $category
+   *   The MIME category (e.g., 'image', 'video').
+   *
+   * @return array
+   *   Array of media type options matching the category.
+   */
+  private function getMediaTypesByCategory($category) {
+    $options = [];
+    $media_types = $this->entityTypeManager->getStorage('media_type')->loadMultiple();
+
+    foreach ($media_types as $media_type) {
+      $bundle_id = $media_type->id();
+
+      // Determine if this media type is for image or video based on bundle name.
+      $is_image = stripos($bundle_id, 'image') !== FALSE ||
+                  stripos($bundle_id, 'photo') !== FALSE ||
+                  stripos($bundle_id, 'picture') !== FALSE;
+
+      $is_video = stripos($bundle_id, 'video') !== FALSE ||
+                  stripos($bundle_id, 'mov') !== FALSE;
+
+      // Add to options if it matches the requested category.
+      if (($category === 'image' && $is_image) || ($category === 'video' && $is_video)) {
+        $options[$media_type->id()] = $media_type->label();
+      }
     }
 
     return $options;

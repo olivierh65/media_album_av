@@ -98,6 +98,32 @@
   }
 
   /**
+ * Recalcule les poids des enfants d’un parent jsTree.
+ * Le poids repart à 0 pour chaque parent.
+ */
+function jstreeRecalculateSiblingWeights(tree, parentNodeId) {
+  const parentNode = tree.get_node(parentNodeId);
+  if (!parentNode || !parentNode.children) {
+    return;
+  }
+
+  parentNode.children.forEach((childId, index) => {
+    const childNode = tree.get_node(childId);
+    if (childNode && childNode.data) {
+      childNode.data.weight = index;
+    }
+  });
+}
+
+/**
+ * Retourne le poids suivant pour un parent (création).
+ */
+function jstreeGetNextWeight(tree, parentNodeId) {
+  const parentNode = tree.get_node(parentNodeId);
+  return parentNode?.children?.length || 0;
+}
+
+  /**
    * Find a node by ID in the tree structure.
    *
    * @param {array} nodes
@@ -187,13 +213,13 @@
    */
   function initializeTaxonomyTree(container, vocabularyId, vocabularyLabel) {
     const apiUrl = '/admin/content/media-album/taxonomy/' + vocabularyId + '/api';  // Keep for media_album_av specific modal
-    
+
     // Find the corresponding hidden field within the parent form element
     let selectedField = null;
-    
+
     // Look for hidden field in the immediate parent container
     selectedField = container.parent().find('input[type="hidden"][data-vocabulary-id], input[type="hidden"].taxonomy-selected-value, input[type="hidden"].storage-selected-value');
-    
+
     if (!selectedField.length) {
       // If not found, look in ancestor fieldsets or containers
       const parentContainer = container.closest('[data-tree-type], fieldset');
@@ -332,7 +358,7 @@
             selected_id: data.node.data.term_id,
             hierarchy: hierarchy,
           });
-          
+
           console.log('Setting hidden field value:', value);
           selectedField.val(value);
           console.log('Hidden field value after set:', selectedField.val());
@@ -344,6 +370,33 @@
 
         // Handle drag & drop (reparenting) - save to server AND recalculate weights
         container.on('move_node.jstree', function (e, data) {
+
+          const tree = $(this).jstree(true);
+
+  // Recalculer les poids pour l'ancien parent et le nouveau parent
+  if (data.old_parent !== data.parent) {
+    jstreeRecalculateSiblingWeights(tree, data.old_parent);
+  }
+  jstreeRecalculateSiblingWeights(tree, data.parent);
+
+  // Construire weightsToUpdate pour tous les enfants affectés
+  const weightsToUpdate = {};
+  [data.old_parent, data.parent].forEach(parentNodeId => {
+    const parentNode = tree.get_node(parentNodeId);
+    if (!parentNode) return;
+    parentNode.children.forEach(childId => {
+      const childNode = tree.get_node(childId);
+      if (childNode?.data?.term_id) {
+        weightsToUpdate[childNode.data.term_id] = childNode.data.weight;
+      }
+    });
+  });
+
+  // Infos pour l’ajax
+  const nodeId = data.node.data.term_id;
+  const newParentId = data.parent === '#' ? 0 : tree.get_node(data.parent).data.term_id;
+
+  /*
           const nodeId = data.node.data.term_id;
           const newParentId = data.parent === '#' ? 0 : container.jstree().get_node(data.parent).data.term_id;
           const oldParentId = data.old_parent === '#' ? 0 : (container.jstree().get_node(data.old_parent) ? container.jstree().get_node(data.old_parent).data.term_id : 0);
@@ -366,7 +419,7 @@
               }
             }
           });
-
+*/
           // Save the new parent and weights to server
           $.ajax({
             url: '/admin/taxonomy-service/directory/move-term',
@@ -597,6 +650,8 @@
         description: description,
         parent: parentId || 0,
         weight: weight,
+        vocabulary_id: vocabularyId,
+        parent_id: parentId,
       }),
       success: function (response) {
         if (response.success) {

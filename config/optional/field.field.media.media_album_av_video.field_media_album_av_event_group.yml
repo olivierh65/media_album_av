@@ -1,15 +1,15 @@
-uuid: ea2ef791-687a-49c7-95a5-c6f2abc6e4ec
+uuid: 40f7763c-bd70-4d31-8306-63a1b18e2a49
 langcode: fr
 status: true
 dependencies:
   config:
-    - field.storage.node.field_media_album_av_event_group
-    - node.type.media_album_av
+    - field.storage.media.field_media_album_av_event_group
+    - media.type.media_album_av_video
     - taxonomy.vocabulary.media_album_av_event_group
-id: node.media_album_av.field_media_album_av_event_group
+id: media.media_album_av_video.field_media_album_av_event_group
 field_name: field_media_album_av_event_group
-entity_type: node
-bundle: media_album_av
+entity_type: media
+bundle: media_album_av_video
 label: 'Event Group'
 description: ''
 required: false

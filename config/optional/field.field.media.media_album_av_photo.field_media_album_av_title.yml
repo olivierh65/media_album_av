@@ -1,0 +1,24 @@
+uuid: a6bdc943-64eb-4543-b394-6a7e684dbb21
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_title
+    - filter.format.restricted_html
+    - media.type.media_album_av_photo
+  module:
+    - text
+id: media.media_album_av_photo.field_media_album_av_title
+field_name: field_media_album_av_title
+entity_type: media
+bundle: media_album_av_photo
+label: Title
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - restricted_html
+field_type: text

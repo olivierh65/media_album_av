@@ -1,0 +1,20 @@
+uuid: 1eeeeb73-ec87-42aa-b06d-4ba127d38686
+langcode: fr
+status: true
+dependencies:
+  module:
+    - media
+id: media.field_media_album_av_weight
+field_name: field_media_album_av_weight
+entity_type: media
+type: integer
+settings:
+  unsigned: false
+  size: normal
+module: core
+locked: false
+cardinality: 1
+translatable: true
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

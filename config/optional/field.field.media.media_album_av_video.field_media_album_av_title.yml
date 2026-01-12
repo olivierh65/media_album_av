@@ -1,0 +1,24 @@
+uuid: ebbaf657-e556-42da-ab25-ad626b764ee6
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_title
+    - filter.format.restricted_html
+    - media.type.media_album_av_video
+  module:
+    - text
+id: media.media_album_av_video.field_media_album_av_title
+field_name: field_media_album_av_title
+entity_type: media
+bundle: media_album_av_video
+label: Title
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - restricted_html
+field_type: text

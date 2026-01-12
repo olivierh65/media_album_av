@@ -1,16 +1,14 @@
-uuid: 614da83f-4b69-4319-9122-70f3c1cc82fa
-langcode: en
+uuid: ffc776a4-cc91-41b3-bd84-5bfd4603036f
+langcode: fr
 status: true
 dependencies:
   module:
-    - node
+    - media
     - text
-_core:
-  default_config_hash: TvMoFiqo4ThebBNeKvSJUza8bB5P8oW1HYYIYtbVZu4
-id: node.field_media_album_av_description
+id: media.field_media_album_av_description
 field_name: field_media_album_av_description
-entity_type: node
-type: text_with_summary
+entity_type: media
+type: text_long
 settings: {  }
 module: text
 locked: false

@@ -37,6 +37,24 @@ function media_album_av_theme() {
   ];
 }
 
+/**
+ * Implements hook_views_data().
+ */
+function media_album_av_views_data() {
+  $data = [];
+
+  // Déclare le champ Views custom sur la table media_field_data.
+  $data['media_field_data']['media_album_av_unified_media'] = [
+    'title' => t('Media unifié (album AV)'),
+    'help' => t('Affiche dynamiquement le media (photo / vidéo) selon le type.'),
+    'field' => [
+      'id' => 'media_album_av_unified_media',
+    ],
+  ];
+
+  return $data;
+}
+
 function media_album_av_entity_presave(EntityInterface $entity) {
   if ($entity instanceof NodeInterface && $entity->bundle() === 'media_album_av') {
     $authors = [];

@@ -1,0 +1,24 @@
+uuid: 1d8c4fe6-022f-4ae8-8194-5e5d8261f664
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_description
+    - filter.format.full_html
+    - media.type.media_album_av_photo
+  module:
+    - text
+id: media.media_album_av_photo.field_media_album_av_description
+field_name: field_media_album_av_description
+entity_type: media
+bundle: media_album_av_photo
+label: Description
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  allowed_formats:
+    - full_html
+field_type: text_long

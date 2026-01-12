@@ -1,17 +1,15 @@
-uuid: 0833a03e-cce3-408a-82b0-1447bcb405df
+uuid: e89edc21-ba6a-4327-95e1-52bf0318d082
 langcode: fr
 status: true
 dependencies:
   config:
-    - field.storage.node.field_media_album_av_event
-    - node.type.media_album_av
+    - field.storage.media.field_media_album_av_event
+    - media.type.media_album_av_photo
     - taxonomy.vocabulary.media_album_av_event
-_core:
-  default_config_hash: zNM2oKY6ZJApaWdjbY2xUePbFtvC-mgu1665XsMpb7A
-id: node.media_album_av.field_media_album_av_event
+id: media.media_album_av_photo.field_media_album_av_event
 field_name: field_media_album_av_event
-entity_type: node
-bundle: media_album_av
+entity_type: media
+bundle: media_album_av_photo
 label: Event
 description: ''
 required: false

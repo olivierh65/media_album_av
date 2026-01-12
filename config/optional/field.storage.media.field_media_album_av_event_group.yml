@@ -1,13 +1,13 @@
-uuid: 59bc715a-f066-4bf6-9cc0-a4ec3ac10df8
+uuid: 5e3fc846-436f-4ba5-900d-5111606942ed
 langcode: fr
 status: true
 dependencies:
   module:
-    - node
+    - media
     - taxonomy
-id: node.field_media_album_av_event_group
+id: media.field_media_album_av_event_group
 field_name: field_media_album_av_event_group
-entity_type: node
+entity_type: media
 type: entity_reference
 settings:
   target_type: taxonomy_term

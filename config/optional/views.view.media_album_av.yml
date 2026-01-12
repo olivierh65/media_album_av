@@ -1,14 +1,14 @@
+uuid: 41c28e6d-e2c1-4b41-afbe-ab6d4ebf3499
 langcode: fr
-status: true
+status: false
 dependencies:
   config:
     - field.storage.node.field_media_album_av_authors
     - field.storage.node.field_media_album_av_date
     - field.storage.node.field_media_album_av_description
-    - field.storage.node.field_media_album_av_event
-    - field.storage.node.field_media_album_av_media
     - node.type.media_album_av
   module:
+    - datetime
     - node
     - text
     - user
@@ -66,69 +66,6 @@ display:
           settings:
             link_to_entity: true
           group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_media_album_av_media:
-          id: field_media_album_av_media
-          table: node__field_media_album_av_media
-          field: field_media_album_av_media
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_entity_view
-          settings:
-            view_mode: default
-          group_column: target_id
           group_columns: {  }
           group_rows: true
           delta_limit: 0
@@ -380,7 +317,6 @@ display:
         - user.permissions
       tags:
         - 'config:field.storage.node.field_media_album_av_authors'
-        - 'config:field.storage.node.field_media_album_av_media'
   page_1:
     id: page_1
     display_title: 'All Media Albums'
@@ -426,69 +362,6 @@ display:
           settings:
             link_to_entity: true
           group_column: value
-          group_columns: {  }
-          group_rows: true
-          delta_limit: 0
-          delta_offset: 0
-          delta_reversed: false
-          delta_first_last: false
-          multi_type: separator
-          separator: ', '
-          field_api_classes: false
-        field_media_album_av_media:
-          id: field_media_album_av_media
-          table: node__field_media_album_av_media
-          field: field_media_album_av_media
-          relationship: none
-          group_type: group
-          admin_label: ''
-          plugin_id: field
-          label: ''
-          exclude: false
-          alter:
-            alter_text: false
-            text: ''
-            make_link: false
-            path: ''
-            absolute: false
-            external: false
-            replace_spaces: false
-            path_case: none
-            trim_whitespace: false
-            alt: ''
-            rel: ''
-            link_class: ''
-            prefix: ''
-            suffix: ''
-            target: ''
-            nl2br: false
-            max_length: 0
-            word_boundary: true
-            ellipsis: true
-            more_link: false
-            more_link_text: ''
-            more_link_path: ''
-            strip_tags: false
-            trim: false
-            preserve_tags: ''
-            html: false
-          element_type: ''
-          element_class: ''
-          element_label_type: ''
-          element_label_class: ''
-          element_label_colon: false
-          element_wrapper_type: ''
-          element_wrapper_class: ''
-          element_default_classes: true
-          empty: ''
-          hide_empty: false
-          empty_zero: false
-          hide_alter_empty: true
-          click_sort_column: target_id
-          type: entity_reference_entity_view
-          settings:
-            view_mode: default
-          group_column: target_id
           group_columns: {  }
           group_rows: true
           delta_limit: 0
@@ -808,4 +681,3 @@ display:
         - 'config:field.storage.node.field_media_album_av_authors'
         - 'config:field.storage.node.field_media_album_av_date'
         - 'config:field.storage.node.field_media_album_av_description'
-        - 'config:field.storage.node.field_media_album_av_media'

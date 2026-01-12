@@ -1,0 +1,23 @@
+uuid: 31127dde-2198-48bc-921e-3922a7c109ec
+langcode: fr
+status: true
+dependencies:
+  config:
+    - field.storage.media.field_media_album_av_weight
+    - media.type.media_album_av_video
+id: media.media_album_av_video.field_media_album_av_weight
+field_name: field_media_album_av_weight
+entity_type: media
+bundle: media_album_av_video
+label: Weight
+description: ''
+required: false
+translatable: false
+default_value: {  }
+default_value_callback: ''
+settings:
+  min: null
+  max: null
+  prefix: ''
+  suffix: ''
+field_type: integer

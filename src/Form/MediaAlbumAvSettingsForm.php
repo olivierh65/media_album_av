@@ -176,6 +176,14 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#required' => FALSE,
     ];
 
+    $form['album']['prefered_media_directory'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Preferred Media Directory'),
+      '#description' => $this->t('Select taxonomy containing directories to store medias.'),
+      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
+      '#default_value' => $config->get('prefered_media_directory') ?? '',
+      '#required' => FALSE,
+    ];
     // ==========================================
     // 2. CONFIGURATION PAR TYPE DE MÉDIA
     // ==========================================
@@ -353,6 +361,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('event_vocabulary', $values['album']['event_vocabulary']);
     $config->set('prefered_media_type_photo', $values['album']['prefered_media_type_photo']);
     $config->set('prefered_media_type_video', $values['album']['prefered_media_type_video']);
+    $config->set('prefered_media_directory', $values['album']['prefered_media_directory']);
 
     // Extract the author_fields from the nested structure.
     $author_fields = $values['author_fields'] ?? [];

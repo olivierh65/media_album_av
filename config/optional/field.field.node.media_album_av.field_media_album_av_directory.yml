@@ -2,16 +2,14 @@ langcode: fr
 status: true
 dependencies:
   config:
-    - field.storage.node.field_media_album_av_event
+    - field.storage.node.field_media_album_av_directory
     - node.type.media_album_av
-    - taxonomy.vocabulary.media_album_av_event
-_core:
-  default_config_hash: zNM2oKY6ZJApaWdjbY2xUePbFtvC-mgu1665XsMpb7A
-id: node.media_album_av.field_media_album_av_event
-field_name: field_media_album_av_event
+    - taxonomy.vocabulary.media_album_av_folders
+id: node.media_album_av.field_media_album_av_directory
+field_name: field_media_album_av_directory
 entity_type: node
 bundle: media_album_av
-label: Event
+label: 'Prefered Directory'
 description: ''
 required: false
 translatable: false
@@ -21,10 +19,10 @@ settings:
   handler: 'default:filter_existing_terms'
   handler_settings:
     target_bundles:
-      media_album_av_event: media_album_av_event
+      media_album_av_folders: media_album_av_folders
     sort:
       field: name
       direction: asc
-    auto_create: true
+    auto_create: false
     auto_create_bundle: ''
 field_type: entity_reference

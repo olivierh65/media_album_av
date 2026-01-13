@@ -5,6 +5,7 @@ dependencies:
     - field.field.node.media_album_av.field_media_album_av_authors
     - field.field.node.media_album_av.field_media_album_av_date
     - field.field.node.media_album_av.field_media_album_av_description
+    - field.field.node.media_album_av.field_media_album_av_directory
     - field.field.node.media_album_av.field_media_album_av_event
     - field.field.node.media_album_av.field_media_album_av_event_group
     - field.field.node.media_album_av.field_media_album_av_media
@@ -43,6 +44,14 @@ content:
     settings: {  }
     third_party_settings: {  }
     weight: 0
+    region: content
+  field_media_album_av_directory:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 6
     region: content
   field_media_album_av_event:
     type: entity_reference_label

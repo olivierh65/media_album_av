@@ -440,6 +440,7 @@ class CreateAlbumForm extends FormBase {
       $content_type = $this->albumConfig->getAlbumContentType();
       $event_group_vocab = $this->albumConfig->getEventGroupVocabulary();
       $event_vocab = $this->albumConfig->getEventVocabulary();
+      $directory_vocab = $this->albumConfig->getPreferredMediaDirectoryVocabulary();
 
       // Get the selected taxonomy terms from hidden fields.
       // These fields now contain JSON with selected_id and hierarchy.
@@ -460,9 +461,11 @@ class CreateAlbumForm extends FormBase {
       // Parse JSON if available, otherwise use old format (backward compatibility).
       $event_group_data = $this->parseHierarchyData($event_group_selected);
       $event_data = $this->parseHierarchyData($event_selected);
+      $directory_data = $this->parseHierarchyData($directory_selected);
 
       $event_group_id = $event_group_data['selected_id'];
       $event_id = $event_data['selected_id'];
+      $directory_selected = $directory_data['selected_id'];
 
       // Validate that we have selected terms if vocabularies are configured.
       if ($event_group_vocab && !$event_group_id) {
@@ -500,6 +503,11 @@ class CreateAlbumForm extends FormBase {
           'value' => $values['album_info']['date'],
         ];
       }
+      else {
+        // Set to 0 if no date provided.
+        $date_field = $this->albumConfig->getDateField();
+        $node_data[$date_field] = 0;
+      }
 
       // Add taxonomy references if configured.
       if ($event_group_vocab && $event_group_id) {
@@ -516,6 +524,12 @@ class CreateAlbumForm extends FormBase {
         ];
       }
 
+      if ($directory_selected) {
+        $directory_field = $this->albumConfig->getDirectoryField();
+        $node_data[$directory_field] = [
+          'target_id' => $directory_selected,
+        ];
+      }
       // Create the node.
       $node = $this->entityTypeManager->getStorage('node')->create($node_data);
 

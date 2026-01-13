@@ -2,15 +2,17 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.media.media_album_av_video.field_media_album_av_video_autho
-    - field.field.media.media_album_av_video.field_media_album_av_video_categ
-    - field.field.media.media_album_av_video.field_media_album_av_video_descr
+    - field.field.media.media_album_av_video.field_media_album_av_author
+    - field.field.media.media_album_av_video.field_media_album_av_category
+    - field.field.media.media_album_av_video.field_media_album_av_description
+    - field.field.media.media_album_av_video.field_media_album_av_event
+    - field.field.media.media_album_av_video.field_media_album_av_event_group
+    - field.field.media.media_album_av_video.field_media_album_av_title
     - field.field.media.media_album_av_video.field_media_album_av_video
     - media.type.media_album_av_video
   module:
     - file
     - path
-    - text
 _core:
   default_config_hash: 4WaqtAjjaM86XgQOou2ZoRCnoq2AFbYT3FU_eLPM7R0
 id: media.media_album_av_video.default
@@ -40,34 +42,6 @@ content:
     region: content
     settings:
       progress_indicator: throbber
-    third_party_settings: {  }
-  field_media_album_av_video_autho:
-    type: entity_reference_autocomplete_tags
-    weight: 101
-    region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_media_album_av_video_categ:
-    type: entity_reference_autocomplete_tags
-    weight: 103
-    region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_media_album_av_video_descr:
-    type: text_textarea
-    weight: 102
-    region: content
-    settings:
-      rows: 5
-      placeholder: ''
     third_party_settings: {  }
   langcode:
     type: language_select
@@ -107,4 +81,10 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
-hidden: {  }
+hidden:
+  field_media_album_av_author: true
+  field_media_album_av_category: true
+  field_media_album_av_description: true
+  field_media_album_av_event: true
+  field_media_album_av_event_group: true
+  field_media_album_av_title: true

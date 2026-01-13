@@ -40,3 +40,11 @@ media_album_av.taxonomy_manager_api:
     _permission: 'create media_album_av content'
     vocabulary_id: '[a-z_]+'
     _method: 'GET'
+
+media_album_av.repair_references:
+  path: '/admin/content/media-album-av/repair'
+  defaults:
+    _form: '\Drupal\media_album_av\Form\MediaAlbumAvRepairForm'
+    _title: 'Media Album AV – Integrity check'
+  requirements:
+    _permission: 'media_album_av.repair_references'

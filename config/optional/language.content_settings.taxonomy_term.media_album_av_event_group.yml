@@ -1,0 +1,10 @@
+langcode: fr
+status: true
+dependencies:
+  config:
+    - taxonomy.vocabulary.media_album_av_event_group
+id: taxonomy_term.media_album_av_event_group
+target_entity_type_id: taxonomy_term
+target_bundle: media_album_av_event_group
+default_langcode: site_default
+language_alterable: false

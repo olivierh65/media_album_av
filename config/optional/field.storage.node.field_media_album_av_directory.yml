@@ -1,20 +1,18 @@
-langcode: en
+langcode: fr
 status: true
 dependencies:
   module:
-    - media
+    - node
     - taxonomy
-_core:
-  default_config_hash: 2xAGYwZ9m73sxXX03FCQPq0MyGUkC7jbeEeap28deNk
-id: media.field_media_album_av_video_categ
-field_name: field_media_album_av_video_categ
-entity_type: media
+id: node.field_media_album_av_directory
+field_name: field_media_album_av_directory
+entity_type: node
 type: entity_reference
 settings:
   target_type: taxonomy_term
 module: core
 locked: false
-cardinality: 5
+cardinality: 1
 translatable: true
 indexes: {  }
 persist_with_no_fields: false

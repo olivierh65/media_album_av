@@ -1,0 +1,18 @@
+status: true
+dependencies: {  }
+id: media_album_av.settings
+class: null
+uuid: null
+_core:
+  default_config_hash: R4IF2aVBgMukABbg72jAqB1pzHLjzJXljwLwDVNbpJw
+node_authors_field: field_media_album_av_authors
+album_content_type: media_album_av
+event_group_vocabulary: media_album_av_event_group
+event_vocabulary: media_album_av_event
+date_field: field_media_album_av_date
+event_group_field: field_media_album_av_event_group
+event_field: field_media_album_av_event
+author_fields: {  }
+prefered_media_type_photo: media_album_av_photo
+prefered_media_type_video: media_album_av_video
+prefered_media_directory: media_album_av_folders

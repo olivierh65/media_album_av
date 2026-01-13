@@ -1,0 +1,137 @@
+erDiagram
+    ALBUM ||--o{ FIELD_MEDIAS : "possède (ER standard)"
+    FIELD_MEDIAS }o--|| MEDIA : "référence N-N avec delta"
+    MEDIA ||--o{ FIELD_MEDIAS : "peut être dans plusieurs albums"
+    ALBUM ||--o{ USER : "liste auteurs (calculé)"
+    MEDIA }o--|| USER : "créé par"
+    ALBUM }o--|| TAX_EVENEMENT : "lié à"
+    ALBUM }o--|| TAX_GROUPE_EVENEMENT : "lié à"
+    MEDIA }o--|| TAX_EVENEMENT : "lié à"
+    MEDIA }o--|| TAX_GROUPE_EVENEMENT : "lié à"
+    MEDIA }o--|| TAX_CATEGORIE : "classé dans"
+
+    ALBUM {
+        int nid PK
+        string titre
+        date date
+        text description
+        ref evenement FK "field partagé"
+        ref groupe_evenement FK "field partagé"
+        calculated auteurs "agrégé"
+    }
+
+    FIELD_MEDIAS {
+        int entity_id FK "album_id"
+        int target_id FK "media_id"
+        int delta "poids/ordre 0,1,2..."
+        string field_name "field_medias"
+    }
+
+    MEDIA {
+        int mid PK
+        string bundle "image | video"
+        string titre
+        ref evenement FK "field partagé"
+        ref groupe_evenement FK "field partagé"
+        ref categorie FK
+        ref auteur FK
+        file fichier
+    }
+
+    TAX_EVENEMENT {
+        int tid PK
+        string nom
+        string description
+    }
+
+    TAX_GROUPE_EVENEMENT {
+        int tid PK
+        string nom
+    }
+
+    TAX_CATEGORIE {
+        int tid PK
+        string nom
+    }
+
+    USER {
+        int uid PK
+        string name
+    }
+
+Architecture media-centric (Entity Reference standard)
+ALBUM (node)
+│
+│ 1 ──< field_medias (Entity Reference, multivalué, avec delta)
+│
+▼
+MEDIA (media entity)
+
+🔗 Relations détaillées
+ALBUM
+ ├─ field_medias ────────────────▶ MEDIA
+ │    (N-N, ordre géré par delta)
+ │
+ ├─ field_evenement ─────────────▶ TAX_EVENEMENT
+ ├─ field_groupe_evenement ──────▶ TAX_GROUPE_EVENEMENT
+ └─ auteurs (calculé) ───────────▶ USER (agrégé depuis MEDIA)
+
+MEDIA
+ ├─ uid (créé par) ──────────────▶ USER
+ ├─ field_evenement ─────────────▶ TAX_EVENEMENT
+ ├─ field_groupe_evenement ──────▶ TAX_GROUPE_EVENEMENT
+ └─ field_categorie ─────────────▶ TAX_CATEGORIE
+
+🗂️ Structure des entités
+🧾 ALBUM (node)
+ALBUM
+- nid (PK)
+- titre
+- date
+- description
+- field_evenement (FK)
+- field_groupe_evenement (FK)
+- field_medias (Entity reference → MEDIA, multivalué, ordonné)
+- auteurs (champ calculé, agrégation des auteurs des médias)
+
+🔗 FIELD_MEDIAS (table technique Drupal)
+FIELD_MEDIAS
+- entity_id   (FK → ALBUM.nid)
+- target_id   (FK → MEDIA.mid)
+- delta       (ordre du média dans l'album : 0,1,2...)
+- langcode
+- field_name  ("field_medias")
+
+
+⚠️ Table générée automatiquement par Drupal
+delta = poids par album, sans conflit multi-albums
+
+🎞️ MEDIA
+MEDIA
+- mid (PK)
+- bundle ("image" | "video")
+- titre
+- uid (auteur)
+- field_evenement (FK)
+- field_groupe_evenement (FK)
+- field_categorie (FK)
+- fichier (image / video)
+
+🏷️ TAXONOMIES
+TAX_EVENEMENT
+- tid (PK)
+- nom
+- description
+
+TAX_GROUPE_EVENEMENT
+- tid (PK)
+- nom
+
+TAX_CATEGORIE
+- tid (PK)
+- nom
+
+👤 USER
+USER
+- uid (PK)
+- name

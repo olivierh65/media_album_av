@@ -2,14 +2,16 @@ langcode: en
 status: true
 dependencies:
   config:
-    - field.field.media.media_album_av_video.field_media_album_av_video_autho
-    - field.field.media.media_album_av_video.field_media_album_av_video_categ
-    - field.field.media.media_album_av_video.field_media_album_av_video_descr
+    - field.field.media.media_album_av_video.field_media_album_av_author
+    - field.field.media.media_album_av_video.field_media_album_av_category
+    - field.field.media.media_album_av_video.field_media_album_av_description
+    - field.field.media.media_album_av_video.field_media_album_av_event
+    - field.field.media.media_album_av_video.field_media_album_av_event_group
+    - field.field.media.media_album_av_video.field_media_album_av_title
     - field.field.media.media_album_av_video.field_media_album_av_video
     - media.type.media_album_av_video
   module:
     - file
-    - text
 _core:
   default_config_hash: Z03p5QvClGmbH9Ro0LZCnGIgj15KIuLCA3nxILXZzOs
 id: media.media_album_av_video.default
@@ -31,34 +33,17 @@ content:
     third_party_settings: {  }
     weight: 0
     region: content
-  field_media_album_av_video_autho:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 1
-    region: content
-  field_media_album_av_video_categ:
-    type: entity_reference_label
-    label: above
-    settings:
-      link: true
-    third_party_settings: {  }
-    weight: 3
-    region: content
-  field_media_album_av_video_descr:
-    type: text_default
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    weight: 2
-    region: content
 hidden:
   created: true
   entity_print_view_epub: true
   entity_print_view_pdf: true
   entity_print_view_word_docx: true
+  field_media_album_av_author: true
+  field_media_album_av_category: true
+  field_media_album_av_description: true
+  field_media_album_av_event: true
+  field_media_album_av_event_group: true
+  field_media_album_av_title: true
   langcode: true
   name: true
   thumbnail: true

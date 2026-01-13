@@ -2,3 +2,8 @@ media_album_av.administer_settings:
   title: 'Administer Media Album AV settings'
   description: 'Access the Media Album AV configuration page'
   restrict access: true
+
+media_album_av.repair_references:
+  title: 'Repair Media Album AV references'
+  description: 'Verify and repair broken media references in Media Album AV nodes'
+  restrict access: true

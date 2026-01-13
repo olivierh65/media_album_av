@@ -1,10 +1,27 @@
-media_album_av.settings:
-  title: 'Media Album AV Settings'
-  description: 'Configure author fields for media types'
+media_album_av.main:
+  title: 'Media Album AV'
+  description: 'Media Album AV configuration and management'
   parent: system.admin_config_media
   route_name: media_album_av.settings
+  weight: 9
+
+media_album_av.settings:
+  title: 'Settings'
+  description: 'Configure author fields for media types'
+  parent: media_album_av.main
+  route_name: media_album_av.settings
+  weight: 0
+
 media_album_av.create_album:
-  title: 'Create Media Album'
+  title: 'Create Album'
   description: 'Create a new media album'
-  parent: system.admin_content
+  parent: media_album_av.main
   route_name: media_album_av.create_album
+  weight: 1
+
+media_album_av.repair_references:
+  title: 'Repair'
+  description: 'Check and repair broken Media references'
+  route_name: media_album_av.repair_references
+  parent: media_album_av.main
+  weight: 2

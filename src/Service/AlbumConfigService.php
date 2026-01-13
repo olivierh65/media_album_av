@@ -62,6 +62,18 @@ class AlbumConfigService {
   }
 
   /**
+   * Get the configured preferred media directory vocabulary.
+   *
+   * @return string|null
+   *   The vocabulary ID or NULL if not configured.
+   */
+  public function getPreferredMediaDirectoryVocabulary() {
+    $config = $this->configFactory->get('media_album_av.settings');
+    $vocab = $config->get('prefered_media_directory');
+    return !empty($vocab) ? $vocab : NULL;
+  }
+
+  /**
    * Get the configured date field name.
    *
    * @return string
@@ -92,6 +104,14 @@ class AlbumConfigService {
   public function getEventField() {
     $config = $this->configFactory->get('media_album_av.settings');
     return $config->get('event_field') ?? 'field_media_album_av_event';
+  }
+
+  /**
+   *
+   */
+  public function getDirectoryField() {
+    $config = $this->configFactory->get('media_album_av.settings');
+    return $config->get('prefered_media_directory_field') ?? 'field_media_album_av_directory';
   }
 
 }

@@ -2,6 +2,7 @@
 
 namespace Drupal\media_album_av\Form;
 
+use Drupal\media\Entity\Media;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\media_album_av\Service\MediaAlbumAvIntegrityChecker;
@@ -48,6 +49,8 @@ class MediaAlbumAvRepairForm extends FormBase {
     }
 
     $options = [];
+    $rows = [];
+
     foreach ($issues as $nid => $data) {
       $options[$nid] = sprintf(
         '%s (NID %d) – %d media manquant(s)',
@@ -55,6 +58,23 @@ class MediaAlbumAvRepairForm extends FormBase {
         $nid,
         count($data['broken'])
       );
+
+      // Build detailed table rows for each broken media.
+      foreach ($data['broken'] as $media_id) {
+        $media = Media::load($media_id);
+        $modified_date = $media ? \Drupal::service('date.formatter')->format(
+          $media->getChangedTime(),
+          'short'
+        ) : $this->t('N/A');
+        $media_name = $media ? $media->label() : $this->t('Unknown');
+
+        $rows[] = [
+          'album' => $data['title'],
+          'media_id' => $media_id,
+          'media_name' => $media_name,
+          'modified' => $modified_date,
+        ];
+      }
     }
 
     $form['albums'] = [
@@ -63,6 +83,27 @@ class MediaAlbumAvRepairForm extends FormBase {
       '#options' => $options,
       '#default_value' => array_keys($options),
     ];
+
+    // Add detailed table of broken media.
+    if (!empty($rows)) {
+      $form['broken_media'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Detailed list of broken media'),
+        '#open' => TRUE,
+      ];
+
+      $form['broken_media']['table'] = [
+        '#type' => 'table',
+        '#header' => [
+          'album' => $this->t('Album'),
+          'media_id' => $this->t('Media ID'),
+          'media_name' => $this->t('Media Name'),
+          'modified' => $this->t('Last Modified'),
+        ],
+        '#rows' => $rows,
+        '#empty' => $this->t('No broken media found.'),
+      ];
+    }
 
     $form['actions'] = ['#type' => 'actions'];
 

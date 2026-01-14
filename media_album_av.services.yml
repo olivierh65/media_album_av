@@ -5,3 +5,8 @@ services:
 
   media_album_av.integrity_checker:
     class: Drupal\media_album_av\Service\MediaAlbumAvIntegrityChecker
+
+  stream_wrapper.albumav:
+    class: Drupal\media_album_av\StreamWrapper\AlbumsStream
+    tags:
+      - { name: stream_wrapper, scheme: albumav }

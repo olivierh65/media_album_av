@@ -3,6 +3,7 @@
 namespace Drupal\media_album_av\StreamWrapper;
 
 use Drupal\s3fs\StreamWrapper\S3fsStream;
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 
 /**
  * Defines a custom S3 stream wrapper for archives.
@@ -16,7 +17,7 @@ class AlbumsStream extends S3fsStream {
    * {@inheritdoc}
    */
   public static function getType() {
-    return \STREAM_WRAPPERS_NORMAL;
+    return StreamWrapperInterface::NORMAL;
   }
 
   /**

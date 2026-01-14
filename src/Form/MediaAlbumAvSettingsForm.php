@@ -7,6 +7,7 @@ use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\StreamWrapper\StreamWrapperInterface;
 
 /**
  * Configuration form for Media Album AV settings.
@@ -173,6 +174,18 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#description' => $this->t('Select the default media type to use for uploaded videos.'),
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $video_media_types,
       '#default_value' => $config->get('prefered_media_type_video') ?? '',
+      '#required' => FALSE,
+    ];
+
+    // Get available stream wrappers.
+    $stream_wrappers = $this->getStreamWrappers();
+
+    $form['album']['prefered_storage_location'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Preferred Storage Location (Legacy)'),
+      '#description' => $this->t('Deprecated: Use "Preferred Stream Wrapper" instead. Select the storage location for media files.'),
+      '#options' => $stream_wrappers,
+      '#default_value' => $config->get('prefered_storage_location') ?? 'private',
       '#required' => FALSE,
     ];
 
@@ -361,6 +374,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('event_vocabulary', $values['album']['event_vocabulary']);
     $config->set('prefered_media_type_photo', $values['album']['prefered_media_type_photo']);
     $config->set('prefered_media_type_video', $values['album']['prefered_media_type_video']);
+    $config->set('prefered_storage_location', $values['album']['prefered_storage_location']);
     $config->set('prefered_media_directory', $values['album']['prefered_media_directory']);
 
     // Extract the author_fields from the nested structure.
@@ -441,6 +455,24 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       if (($category === 'image' && $is_image) || ($category === 'video' && $is_video)) {
         $options[$media_type->id()] = $media_type->label();
       }
+    }
+
+    return $options;
+  }
+
+  /**
+   * Get available stream wrappers.
+   *
+   * @return array
+   *   Array of stream wrapper options.
+   */
+  private function getStreamWrappers() {
+    $options = [];
+    $stream_wrappers = \Drupal::service('stream_wrapper_manager')->getWrappers(StreamWrapperInterface::VISIBLE);
+
+    foreach ($stream_wrappers as $scheme => $wrapper_info) {
+      $label = $wrapper_info['name'] ?? ucfirst($scheme);
+      $options[$scheme] = $label . ' (' . $scheme . '://)';
     }
 
     return $options;

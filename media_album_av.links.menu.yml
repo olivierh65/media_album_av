@@ -25,3 +25,9 @@ media_album_av.repair_references:
   route_name: media_album_av.repair_references
   parent: media_album_av.main
   weight: 2
+media_album_av.check_albums:
+  title: 'Check References'
+  description: 'Check media album references and file status'
+  route_name: media_album_av.check_albums
+  parent: media_album_av.main
+  weight: 2

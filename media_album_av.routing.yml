@@ -48,3 +48,10 @@ media_album_av.repair_references:
     _title: 'Media Album AV – Integrity check'
   requirements:
     _permission: 'media_album_av.repair_references'
+media_album_av.check_albums:
+  path: '/admin/content/media-album-av/check'
+  defaults:
+    _form: '\Drupal\media_album_av\Form\MediaAlbumAvCheckForm'
+    _title: 'Media Album AV – Check References'
+  requirements:
+    _permission: 'media_album_av.administer_settings'

@@ -19,3 +19,6 @@ dependencies:
   - filefield_paths
   - readonly_field_widget
   - media_taxonomy_service
+
+libraries:
+  - media_album_av/album_check

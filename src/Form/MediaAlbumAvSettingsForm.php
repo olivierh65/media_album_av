@@ -130,7 +130,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Album Content Type'),
       '#description' => $this->t('Select the content type to use for creating new albums.'),
       '#options' => $content_types,
-      '#default_value' => $config->get('album_content_type') ?? 'media_album_av',
+      '#default_value' => $config->get('album_content_type') ??
+      (array_key_exists('media_album_av', $content_types) ? 'media_album_av' : NULL) ?? '',
       '#required' => TRUE,
     ];
 
@@ -142,7 +143,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Event Group Vocabulary'),
       '#description' => $this->t('Select the taxonomy vocabulary to use for Event Group (optional).'),
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
-      '#default_value' => $config->get('event_group_vocabulary') ?? 'media_album_av_event_group',
+      '#default_value' => $config->get('event_group_vocabulary') ??
+      (array_key_exists('media_album_av_event_group', $vocabularies) ? 'media_album_av_event_group' : NULL) ?? '',
       '#required' => FALSE,
     ];
 
@@ -151,7 +153,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Event Vocabulary'),
       '#description' => $this->t('Select the taxonomy vocabulary to use for Event (optional).'),
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
-      '#default_value' => $config->get('event_vocabulary') ?? 'media_album_av_event',
+      '#default_value' => $config->get('event_vocabulary') ??
+      (array_key_exists('media_album_av_event', $vocabularies) ? 'media_album_av_event' : NULL) ?? '',
       '#required' => FALSE,
     ];
 
@@ -164,7 +167,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Preferred Media Type for Photos'),
       '#description' => $this->t('Select the default media type to use for uploaded photos/images.'),
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $photo_media_types,
-      '#default_value' => $config->get('prefered_media_type_photo') ?? '',
+      '#default_value' => $config->get('prefered_media_type_photo') ??
+      (array_key_exists('media_album_av_photo', $photo_media_types) ? 'media_album_av_photo' : NULL) ?? '',
       '#required' => FALSE,
     ];
 
@@ -173,7 +177,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Preferred Media Type for Videos'),
       '#description' => $this->t('Select the default media type to use for uploaded videos.'),
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $video_media_types,
-      '#default_value' => $config->get('prefered_media_type_video') ?? '',
+      '#default_value' => $config->get('prefered_media_type_video') ??
+      (array_key_exists('media_album_av_video', $video_media_types) ? 'media_album_av_video' : NULL) ?? '',
       '#required' => FALSE,
     ];
 
@@ -194,7 +199,8 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Preferred Media Directory'),
       '#description' => $this->t('Select taxonomy containing directories to store medias.'),
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
-      '#default_value' => $config->get('prefered_media_directory') ?? '',
+      '#default_value' => $config->get('prefered_media_directory') ??
+      (array_key_exists('media_album_av_folders', $vocabularies) ? 'media_album_av_folders' : NULL) ?? 'private',
       '#required' => FALSE,
     ];
     // ==========================================

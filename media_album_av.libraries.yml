@@ -44,4 +44,8 @@ taxonomy-manager-inline:
     - core/once
     - media_taxonomy_service/jstree
 
-
+album_check:
+  version: 1.0
+  css:
+    theme:
+      css/album_check.css: {}

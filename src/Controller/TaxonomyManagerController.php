@@ -5,7 +5,7 @@ namespace Drupal\media_album_av\Controller;
 use Drupal\Core\Controller\ControllerBase;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\media_album_av\Service\AlbumConfigService;
-use Drupal\media_taxonomy_service\Service\DirectoryService;
+use Drupal\media_album_av_common\Service\DirectoryService;
 use Drupal\taxonomy\Entity\Vocabulary;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\JsonResponse;
@@ -31,9 +31,9 @@ class TaxonomyManagerController extends ControllerBase {
   protected $albumConfig;
 
   /**
-   * The directory service (from media_taxonomy_service).
+   * The directory service (from ).
    *
-   * @var \Drupal\media_taxonomy_service\Service\DirectoryService
+   * @var \Drupal\\Service\DirectoryService
    */
   protected $directoryService;
 
@@ -44,7 +44,7 @@ class TaxonomyManagerController extends ControllerBase {
    *   The entity type manager.
    * @param \Drupal\media_album_av\Service\AlbumConfigService $album_config
    *   The album config service.
-   * @param \Drupal\media_taxonomy_service\Service\DirectoryService $directory_service
+   * @param \Drupal\\Service\DirectoryService $directory_service
    *   The directory service.
    */
   public function __construct(
@@ -64,7 +64,7 @@ class TaxonomyManagerController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('media_album_av.album_config'),
-      $container->get('media_taxonomy_service.directory_service')
+      $container->get('.directory_service')
     );
   }
 

@@ -39,7 +39,7 @@ taxonomy-manager-modal:
     - core/drupal
     - core/jquery
     - core/once
-    - media_taxonomy_service/jstree
+    - /jstree
 
 taxonomy-manager-inline:
   css:
@@ -51,7 +51,7 @@ taxonomy-manager-inline:
     - core/drupal
     - core/jquery
     - core/once
-    - media_taxonomy_service/jstree
+    - /jstree
 
 album_check:
   version: 1.0

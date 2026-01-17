@@ -18,8 +18,7 @@ dependencies:
   - drupal:text
   - filefield_paths
   - readonly_field_widget
-  - media_taxonomy_service
-  - media_field_representations
+  - media_album_av_common
 
 libraries:
   - media_album_av/album_check

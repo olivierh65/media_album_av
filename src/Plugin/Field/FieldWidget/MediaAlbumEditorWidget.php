@@ -6,8 +6,8 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Url;
-use Drupal\media_field_representations\Traits\FieldWidgetBuilderTrait;
-use Drupal\media_field_representations\Service\MediaViewRendererService;
+use Drupal\media_album_av_common\Traits\FieldWidgetBuilderTrait;
+use Drupal\media_album_av_common\Service\MediaViewRendererService;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -40,7 +40,7 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
   /**
    * The media view renderer service.
    *
-   * @var \Drupal\media_field_representations\Service\MediaViewRendererService
+   * @var \Drupal\media_album_av_common\Service\MediaViewRendererService
    */
   protected $mediaViewRenderer;
 
@@ -64,7 +64,7 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
       $configuration['settings'],
       $configuration['third_party_settings'],
       $container->get('entity_type.manager'),
-      $container->get('media_field_representations.media_view_renderer')
+      $container->get('media_album_av_common.media_view_renderer')
     );
   }
 

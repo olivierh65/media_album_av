@@ -9,6 +9,15 @@ album-forms:
     - core/jquery.ui.dialog
     - media_album_av/taxonomy-manager-modal
 
+media-album-editor-widget:
+  css:
+    theme:
+      css/media-album-editor-widget.css: {}
+  dependencies:
+    - core/drupal
+    - media_drop/draggable_flexgrid
+    - media_drop/media_drop_manage_image
+
 taxonomy-manager:
   css:
     theme:
@@ -48,4 +57,17 @@ album_check:
   version: 1.0
   css:
     theme:
+      css/album-check.css: {}
+
+media_editor:
+  version: 1.0
+  css:
+    theme:
+      css/media-editor.css: {}
+  js:
+    js/media-editor.js: {}
+  dependencies:
+    - core/drupal
+    - core/jquery
+    - core/once
       css/album_check.css: {}

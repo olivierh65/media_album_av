@@ -1,0 +1,79 @@
+/**
+ * @file
+ * Styles for Media Album Editor Widget
+ */
+
+.media-album-editor-widget {
+  padding: 1rem;
+  background: #f9f9f9;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+.media-album-editor-instructions {
+  margin-bottom: 1rem;
+  padding: 0.75rem;
+  background: #e3f2fd;
+  border-left: 4px solid #2196f3;
+  border-radius: 2px;
+}
+
+.media-album-editor-instructions p {
+  margin: 0;
+  color: #1565c0;
+  font-size: 0.9rem;
+}
+
+.media-album-editor-actions {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #ddd;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.media-album-editor-actions .button {
+  padding: 0.5rem 1rem;
+  background: #0087f7;
+  color: white;
+  border: 1px solid #0087f7;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  transition: all 0.3s ease;
+}
+
+.media-album-editor-actions .button:hover {
+  background: #0066cc;
+  border-color: #0066cc;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.media-album-editor-actions .button.button-action::before {
+  content: '';
+  margin-right: 0.5rem;
+}
+
+.media-album-editor-actions .button.button-remove {
+  background: #f44336;
+  border-color: #f44336;
+}
+
+.media-album-editor-actions .button.button-remove:hover {
+  background: #d32f2f;
+  border-color: #d32f2f;
+}
+
+/* Hide problematic form elements from embedded view */
+.media-album-editor-widget .views-exposed-form {
+  display: none;
+}
+
+.media-album-editor-widget .view-header,
+.media-album-editor-widget .view-footer {
+  display: none;
+}

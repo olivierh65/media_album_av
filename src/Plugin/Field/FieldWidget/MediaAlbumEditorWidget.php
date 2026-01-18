@@ -45,12 +45,20 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
   protected $mediaViewRenderer;
 
   /**
+   * The image style storage.
+   *
+   * @var \Drupal\Core\Entity\EntityStorageInterface
+   */
+  protected $imageStyleStorage;
+
+  /**
    * Constructs a new MediaAlbumEditorWidget.
    */
   public function __construct($plugin_id, $plugin_definition, $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, MediaViewRendererService $media_view_renderer) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
     $this->entityTypeManager = $entity_type_manager;
     $this->mediaViewRenderer = $media_view_renderer;
+    $this->imageStyleStorage = $entity_type_manager->getStorage('image_style');
   }
 
   /**
@@ -75,6 +83,10 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
     return [
       'view_id' => 'media_album_av_editor',
       'display_id' => 'media_album_av_editor',
+      'image_thumbnail_style' => 'medium',
+      'columns' => 6,
+      'gap' => '10px',
+      'items_per_page' => 100,
     ] + parent::defaultSettings();
   }
 
@@ -98,7 +110,88 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
       '#default_value' => $this->getSetting('display_id'),
     ];
 
+    // Image styles for thumbnails.
+    $image_styles = $this->imageStyleStorage->loadMultiple();
+    foreach ($image_styles as $style => $image_style) {
+      $image_thumbnail_style[$image_style->id()] = $image_style->label();
+    }
+    $default_style = '';
+    if (isset($this->options['image_thumbnail_style']) && $this->getSetting('image_thumbnail_style')) {
+      $default_style = $this->getSetting('image_thumbnail_style');
+    }
+    elseif (isset($image_styles['medium'])) {
+      $default_style = 'medium';
+    }
+    elseif (isset($image_styles['thumbnail'])) {
+      $default_style = 'thumbnail';
+    }
+    elseif (!empty($image_styles)) {
+      $default_style = array_key_first($image_styles);
+    }
+    $this->setSetting('image_thumbnail_style', $default_style);
+
+    $element['image_thumbnail_style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image thumbnail style'),
+      '#description' => $this->t('The image style to use for media thumbnails in the editor.'),
+      '#options' => $image_thumbnail_style,
+      '#default_value' => $this->getSetting('image_thumbnail_style'),
+    ];
+
+    $element['columns'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Number of columns'),
+      '#description' => $this->t('The number of columns to display in the media grid.'),
+      '#default_value' => $this->getSetting('columns'),
+      '#min' => 1,
+      '#max' => 12,
+    ];
+    $element['gap'] = [
+      '#type' => 'textfield',
+      '#title' => $this->t('Gap between items'),
+      '#description' => $this->t('The gap between items in the media grid.'),
+      '#default_value' => $this->getSetting('gap'),
+    ];
+
+    $element['items_per_page'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Items per page'),
+      '#description' => $this->t('The number of media items to display per page.'),
+      '#default_value' => $this->getSetting('items_per_page'),
+      '#min' => 1,
+      '#max' => 1000,
+    ];
+
     return $element + parent::settingsForm($form, $form_state);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function settingsSummary() {
+    $summary = [];
+
+    $view_id = $this->getSetting('view_id');
+    $display_id = $this->getSetting('display_id');
+
+    if ($view_id && $display_id) {
+      $summary[] = $this->t('View: @view (@display)', [
+        '@view' => $view_id,
+        '@display' => $display_id,
+      ]);
+    }
+    else {
+      $summary[] = $this->t('View: Not configured');
+    }
+
+    $summary[] = $this->t('Columns: @columns', [
+      '@columns' => $this->getSetting('columns'),
+    ]);
+
+    $summary[] = $this->t('Thumbnail style: @style', [
+      '@style' => $this->getSetting('image_thumbnail_style'),
+    ]);
+    return $summary;
   }
 
   /**

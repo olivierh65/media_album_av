@@ -71,3 +71,15 @@ media_editor:
     - core/jquery
     - core/once
       css/album_check.css: {}
+
+media-light-table:
+  version: 1.x
+  js:
+    js/light-table.js: {}
+  css:
+    theme:
+      css/light-table.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/drupalSettings

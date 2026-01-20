@@ -227,12 +227,11 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
 
       // Utiliser renderEmbeddedMediaView qui retourne le template personnalisé.
       $elements['view'] = $this->mediaViewRenderer->renderEmbeddedMediaView(
-      $view_id,
-      $display_id,
-      [$node_id],
-      // Passer les IDs des médias.
-      $media_ids,
-      ['media_album_av/media-album-editor-widget']
+        $view_id,
+        $display_id,
+        [$node_id],  // arguments
+        ['media_album_av/media-album-editor-widget'],  // libraries
+        []  // grouping_override (empty for initial load)
       );
     }
     else {

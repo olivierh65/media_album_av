@@ -13,7 +13,7 @@ dependencies:
     - node.type.media_album_av
   module:
     - datetime
-    - media_album_av
+    - entity_browser
     - text
 _core:
   default_config_hash: qM_C0yDLSX8YIh7eX67ggOyACzV_ow6EUdahnqBLlU8
@@ -77,10 +77,19 @@ content:
       placeholder: ''
     third_party_settings: {  }
   field_media_album_av_media:
-    type: media_album_av_media_editor
-    weight: 26
+    type: entity_browser_entity_reference
+    weight: 28
     region: content
-    settings: {  }
+    settings:
+      entity_browser: media_directories_modal
+      field_widget_display: rendered_entity
+      field_widget_edit: true
+      field_widget_remove: true
+      field_widget_replace: false
+      open: false
+      field_widget_display_settings:
+        view_mode: default
+      selection_mode: selection_append
     third_party_settings: {  }
   title:
     type: string_textfield

@@ -82,6 +82,7 @@ content:
       placeholder: ''
     third_party_settings: {  }
 hidden:
+  exif_inline_data_display: true
   field_media_album_av_author: true
   field_media_album_av_category: true
   field_media_album_av_description: true

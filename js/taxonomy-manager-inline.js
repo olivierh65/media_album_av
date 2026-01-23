@@ -422,7 +422,7 @@ function jstreeGetNextWeight(tree, parentNodeId) {
 */
           // Save the new parent and weights to server
           $.ajax({
-            url: '/admin/taxonomy-service/directory/move-term',
+            url: '/admin/media_album_av_common/directory/move-term',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify({
@@ -639,7 +639,7 @@ function jstreeGetNextWeight(tree, parentNodeId) {
   function addTerm(name, description, parentId, vocabularyId, treeContainer, modal) {
     // Calculate weight based on sibling count
     const weight = calculateTermWeight(treeContainer, parentId || 0);
-    const url = '/admin/taxonomy-service/directory/create-term';
+    const url = '/admin/media_album_av_common/directory/create-term';
 
     $.ajax({
       url: url,
@@ -688,7 +688,7 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The modal element.
    */
   function updateTerm(termId, name, description, treeContainer, vocabularyId, modal) {
-    const url = '/admin/taxonomy-service/directory/update-term';
+    const url = '/admin/media_album_av_common/directory/update-term';
 
     $.ajax({
       url: url,
@@ -728,7 +728,7 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The vocabulary ID.
    */
   function deleteTerm(termId, treeContainer, vocabularyId) {
-    const url = '/admin/taxonomy-service/directory/delete-term';
+    const url = '/admin/media_album_av_common/directory/delete-term';
 
     $.ajax({
       url: url,
@@ -764,7 +764,7 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    */
   function loadTermData(termId, callback) {
     $.ajax({
-      url: '/admin/taxonomy-service/directory/get-term/' + termId,
+      url: '/admin/media_album_av_common/directory/get-term/' + termId,
       type: 'GET',
       dataType: 'json',
       success: function (response) {

@@ -64,7 +64,7 @@ class TaxonomyManagerController extends ControllerBase {
     return new static(
       $container->get('entity_type.manager'),
       $container->get('media_album_av.album_config'),
-      $container->get('.directory_service')
+      $container->get('media_album_av_common.directory_service')
     );
   }
 
@@ -98,7 +98,7 @@ class TaxonomyManagerController extends ControllerBase {
       '#attached' => [
         'library' => [
           'media_album_av/taxonomy-manager-modal',
-          'media_album_av/jstree',
+          'media_album_av_common/jstree',
         ],
       ],
     ];
@@ -162,7 +162,7 @@ class TaxonomyManagerController extends ControllerBase {
       '#attached' => [
         'library' => [
           'media_album_av/taxonomy-manager-modal',
-          'media_album_av/jstree',
+          'media_album_av_common/jstree',
         ],
       ],
     ];

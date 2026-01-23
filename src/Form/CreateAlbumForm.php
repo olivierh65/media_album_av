@@ -171,7 +171,7 @@ class CreateAlbumForm extends FormBase {
     ];
 
     // Attach jsTree library.
-    $form['#attached']['library'][] = 'media_album_av/jstree';
+    $form['#attached']['library'][] = 'media_album_av_common/jstree';
     $form['#attached']['library'][] = 'media_album_av/taxonomy-manager-inline';
 
     // Get configured vocabularies.
@@ -263,7 +263,7 @@ class CreateAlbumForm extends FormBase {
     ];
 
     // Attach jsTree library.
-    $form['#attached']['library'][] = 'media_album_av/jstree';
+    $form['#attached']['library'][] = 'media_album_av_common/jstree';
     $form['#attached']['library'][] = 'media_album_av/taxonomy-manager-inline';
 
     $directory_vocab = $this->getDirectoryVocabulary();

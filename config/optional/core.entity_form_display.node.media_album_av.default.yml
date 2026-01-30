@@ -9,11 +9,13 @@ dependencies:
     - field.field.node.media_album_av.field_media_album_av_directory
     - field.field.node.media_album_av.field_media_album_av_event
     - field.field.node.media_album_av.field_media_album_av_event_group
+    - field.field.node.media_album_av.field_media_album_av_grouping
     - field.field.node.media_album_av.field_media_album_av_media
     - node.type.media_album_av
   module:
     - datetime
     - entity_browser
+    - media_album_av_common
     - text
 _core:
   default_config_hash: qM_C0yDLSX8YIh7eX67ggOyACzV_ow6EUdahnqBLlU8
@@ -48,7 +50,7 @@ content:
     third_party_settings: {  }
   field_media_album_av_directory:
     type: entity_reference_autocomplete
-    weight: 27
+    weight: 6
     region: content
     settings:
       match_operator: CONTAINS
@@ -76,9 +78,15 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_media_album_av_grouping:
+    type: grouping_fields_widget
+    weight: 7
+    region: content
+    settings: {  }
+    third_party_settings: {  }
   field_media_album_av_media:
     type: entity_browser_entity_reference
-    weight: 28
+    weight: 8
     region: content
     settings:
       entity_browser: media_directories_modal

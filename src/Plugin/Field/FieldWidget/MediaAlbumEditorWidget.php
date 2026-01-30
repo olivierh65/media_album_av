@@ -1,64 +1,42 @@
 <?php
 
-namespace Drupal\media_album_av\Plugin\Field\FieldWidget;
+namespace Drupal\media_album_av_common\Plugin\Field\FieldWidget;
 
+use Drupal\Core\Field\FieldDefinitionInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Field\WidgetBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\Core\Url;
-use Drupal\media_album_av_common\Traits\FieldWidgetBuilderTrait;
-use Drupal\media_album_av_common\Service\MediaViewRendererService;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\media_album_av_common\Service\AlbumGroupingFieldsService;
 
 /**
- * Plugin implementation of 'media_album_av_media_editor' widget.
- *
- * Renders a VBO media grid for managing media in album nodes.
+ * Plugin implementation of the 'grouping_fields_widget'.
  *
  * @FieldWidget(
- *   id = "media_album_av_media_editor",
- *   label = @Translation("Media Editor (Album) - Grid View"),
+ *   id = "grouping_fields_widget",
+ *   label = @Translation("Grouping Fields Selector"),
  *   field_types = {
- *     "entity_reference"
+ *     "list_string"
  *   },
  *   multiple_values = TRUE
  * )
  */
-class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPluginInterface {
-
-  use FieldWidgetBuilderTrait;
+class GroupingFieldsWidget extends WidgetBase implements ContainerFactoryPluginInterface {
 
   /**
-   * The entity type manager.
+   * The grouping fields service.
    *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
+   * @var \Drupal\media_album_av_common\Service\AlbumGroupingFieldsService
    */
-  protected $entityTypeManager;
+  protected $groupingFieldsService;
 
   /**
-   * The media view renderer service.
-   *
-   * @var \Drupal\media_album_av_common\Service\MediaViewRendererService
+   * {@inheritdoc}
    */
-  protected $mediaViewRenderer;
-
-  /**
-   * The image style storage.
-   *
-   * @var \Drupal\Core\Entity\EntityStorageInterface
-   */
-  protected $imageStyleStorage;
-
-  /**
-   * Constructs a new MediaAlbumEditorWidget.
-   */
-  public function __construct($plugin_id, $plugin_definition, $field_definition, array $settings, array $third_party_settings, EntityTypeManagerInterface $entity_type_manager, MediaViewRendererService $media_view_renderer) {
+  public function __construct($plugin_id, $plugin_definition, FieldDefinitionInterface $field_definition, array $settings, array $third_party_settings, AlbumGroupingFieldsService $grouping_fields_service) {
     parent::__construct($plugin_id, $plugin_definition, $field_definition, $settings, $third_party_settings);
-    $this->entityTypeManager = $entity_type_manager;
-    $this->mediaViewRenderer = $media_view_renderer;
-    $this->imageStyleStorage = $entity_type_manager->getStorage('image_style');
+    $this->groupingFieldsService = $grouping_fields_service;
   }
 
   /**
@@ -71,206 +49,143 @@ class MediaAlbumEditorWidget extends WidgetBase implements ContainerFactoryPlugi
       $configuration['field_definition'],
       $configuration['settings'],
       $configuration['third_party_settings'],
-      $container->get('entity_type.manager'),
-      $container->get('media_album_av_common.media_view_renderer')
+      $container->get('media_album_av_common.grouping_fields')
     );
   }
 
   /**
    * {@inheritdoc}
    */
-  public static function defaultSettings() {
-    return [
-      'view_id' => 'media_album_av_editor',
-      'display_id' => 'media_album_av_editor',
-      'image_thumbnail_style' => 'medium',
-      'columns' => 6,
-      'gap' => '10px',
-      'items_per_page' => 100,
-    ] + parent::defaultSettings();
-  }
+  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
+    // Récupérer tous les champs disponibles directement via le service.
+    $field_options = $this->getFieldOptions();
 
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsForm(array $form, FormStateInterface $form_state) {
-    $element = [];
+    if (empty($field_options)) {
+      $element['warning'] = [
+        '#type' => 'markup',
+        '#markup' => '<div class="messages messages--warning">' . $this->t('No grouping fields available. Please check field definitions.') . '</div>',
+      ];
+      return $element;
+    }
 
-    $element['view_id'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('View ID'),
-      '#description' => $this->t('The ID of the Views to use for displaying media.'),
-      '#default_value' => $this->getSetting('view_id'),
+    $element['#attached']['library'][] = 'core/drupal.tabledrag';
+
+    $element['grouping_table'] = [
+      '#type' => 'table',
+      '#header' => [
+        $this->t('Level'),
+        $this->t('Field'),
+        $this->t('Weight'),
+      ],
+      '#attributes' => ['id' => 'grouping-fields-table-' . $this->fieldDefinition->getName()],
+      '#empty' => $this->t('No grouping fields selected.'),
+      '#tabledrag' => [
+        [
+          'action' => 'order',
+          'relationship' => 'sibling',
+          'group' => 'grouping-order-weight',
+        ],
+      ],
+      '#prefix' => '<div id="grouping-fields-wrapper">',
+      '#suffix' => '</div>',
     ];
 
-    $element['display_id'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Display ID'),
-      '#description' => $this->t('The display ID within the View.'),
-      '#default_value' => $this->getSetting('display_id'),
-    ];
-
-    // Image styles for thumbnails.
-    $image_styles = $this->imageStyleStorage->loadMultiple();
-    foreach ($image_styles as $style => $image_style) {
-      $image_thumbnail_style[$image_style->id()] = $image_style->label();
-    }
-    $default_style = '';
-    if (isset($this->options['image_thumbnail_style']) && $this->getSetting('image_thumbnail_style')) {
-      $default_style = $this->getSetting('image_thumbnail_style');
-    }
-    elseif (isset($image_styles['medium'])) {
-      $default_style = 'medium';
-    }
-    elseif (isset($image_styles['thumbnail'])) {
-      $default_style = 'thumbnail';
-    }
-    elseif (!empty($image_styles)) {
-      $default_style = array_key_first($image_styles);
-    }
-    $this->setSetting('image_thumbnail_style', $default_style);
-
-    $element['image_thumbnail_style'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Image thumbnail style'),
-      '#description' => $this->t('The image style to use for media thumbnails in the editor.'),
-      '#options' => $image_thumbnail_style,
-      '#default_value' => $this->getSetting('image_thumbnail_style'),
-    ];
-
-    $element['columns'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Number of columns'),
-      '#description' => $this->t('The number of columns to display in the media grid.'),
-      '#default_value' => $this->getSetting('columns'),
-      '#min' => 1,
-      '#max' => 12,
-    ];
-    $element['gap'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('Gap between items'),
-      '#description' => $this->t('The gap between items in the media grid.'),
-      '#default_value' => $this->getSetting('gap'),
-    ];
-
-    $element['items_per_page'] = [
-      '#type' => 'number',
-      '#title' => $this->t('Items per page'),
-      '#description' => $this->t('The number of media items to display per page.'),
-      '#default_value' => $this->getSetting('items_per_page'),
-      '#min' => 1,
-      '#max' => 1000,
-    ];
-
-    return $element + parent::settingsForm($form, $form_state);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function settingsSummary() {
-    $summary = [];
-
-    $view_id = $this->getSetting('view_id');
-    $display_id = $this->getSetting('display_id');
-
-    if ($view_id && $display_id) {
-      $summary[] = $this->t('View: @view (@display)', [
-        '@view' => $view_id,
-        '@display' => $display_id,
-      ]);
-    }
-    else {
-      $summary[] = $this->t('View: Not configured');
-    }
-
-    $summary[] = $this->t('Columns: @columns', [
-      '@columns' => $this->getSetting('columns'),
-    ]);
-
-    $summary[] = $this->t('Thumbnail style: @style', [
-      '@style' => $this->getSetting('image_thumbnail_style'),
-    ]);
-    return $summary;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function form(FieldItemListInterface $items, array &$form, FormStateInterface $form_state, $get_delta = NULL) {
-    $elements = [];
-
-    $node = $items->getEntity();
-    $node_id = $node->id();
-
-    $media_ids = [];
-    foreach ($items as $delta => $item) {
-      if (!empty($item->target_id)) {
-        $media_ids[$delta] = $item->target_id;
+    // Construire les lignes existantes.
+    $values = [];
+    foreach ($items as $item) {
+      if (!empty($item->value)) {
+        $values[] = $item->value;
       }
     }
 
-    $elements['#type'] = 'container';
-    $elements['#attributes'] = ['class' => ['media-album-editor-widget']];
-    $elements['#attached']['library'][] = 'media_album_av/media-album-editor-widget';
+    // Ajouter une ligne vide pour permettre l'ajout.
+    $values[] = '';
 
-    $elements['instructions'] = [
-      '#type' => 'markup',
-      '#markup' => '<div class="media-album-editor-instructions"><p>' .
-      $this->t('Use the grid below to manage media. Drag to reorder or use action buttons.') .
-      '</p></div>',
-    ];
+    foreach ($values as $delta => $field_value) {
+      $level = $delta + 1;
 
-    if ($node_id) {
-      $view_id = $this->getSetting('view_id');
-      $display_id = $this->getSetting('display_id');
+      $element['grouping_table'][$delta] = [
+        '#attributes' => [
+          'class' => ['draggable'],
+        ],
+      ];
 
-      // Utiliser renderEmbeddedMediaView qui retourne le template personnalisé.
-      $elements['view'] = $this->mediaViewRenderer->renderEmbeddedMediaView(
-        $view_id,
-        $display_id,
-        [$node_id],  // arguments
-        ['media_album_av/media-album-editor-widget'],  // libraries
-        []  // grouping_override (empty for initial load)
-      );
-    }
-    else {
-      $elements['empty_message'] = [
-        '#type' => 'markup',
-        '#markup' => '<p><em>' . $this->t('No media selected yet.') . '</em></p>',
+      $element['grouping_table'][$delta]['level'] = [
+        '#markup' => '<strong>' . $this->t('Level @level', ['@level' => $level]) . '</strong>',
+      ];
+
+      $element['grouping_table'][$delta]['field'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Field for level @level', ['@level' => $level]),
+        '#title_display' => 'invisible',
+        '#options' => ['' => $this->t('- Select field -')] + $field_options,
+        '#default_value' => $field_value,
+        '#required' => $delta < count($items),
+      ];
+
+      $element['grouping_table'][$delta]['weight'] = [
+        '#type' => 'weight',
+        '#title' => $this->t('Weight for row @number', ['@number' => $level]),
+        '#title_display' => 'invisible',
+        '#default_value' => $delta,
+        '#attributes' => ['class' => ['grouping-order-weight']],
+        '#delta' => 10,
       ];
     }
 
-    $elements['actions'] = [
+    // Explication pour l'utilisateur.
+    $element['help'] = [
       '#type' => 'container',
-      '#attributes' => ['class' => ['media-album-editor-actions']],
-    ];
-
-    $elements['actions']['add_media'] = [
-      '#type' => 'link',
-      '#title' => $this->t('+ Add media'),
-      '#url' => Url::fromRoute('view.media_drop_manage.page_1'),
-      '#attributes' => [
-        'class' => ['button', 'button-action'],
-        'target' => '_blank',
+      '#attributes' => ['class' => ['description']],
+      'content' => [
+        '#markup' => '<p><strong>' . $this->t('Hierarchy:') . '</strong> ' .
+        $this->t('Drag rows to reorder. Level 1 is the top-level grouping (broadest), Level 2 is nested within Level 1, etc.') . '</p>',
       ],
     ];
 
-    $elements['media_ids'] = [
-      '#type' => 'hidden',
-      '#value' => implode(',', $media_ids),
-      '#attributes' => ['class' => ['media-ids-field']],
-    ];
+    return $element;
+  }
 
-    // Ne pas définir #theme ici car c'est géré par le template du service.
-    return $elements;
+  /**
+   * Get all available field options from service.
+   */
+  protected function getFieldOptions() {
+    $options = [];
+
+    $node_fields = $this->groupingFieldsService->getNodeFields();
+    foreach ($node_fields as $field_name => $config) {
+      $options[$field_name] = $config['label'] . ' (' . $this->t('Node') . ')';
+    }
+
+    $media_fields = $this->groupingFieldsService->getMediaFields();
+    foreach ($media_fields as $field_name => $config) {
+      $options[$field_name] = $config['label'] . ' (' . $this->t('Media') . ')';
+    }
+
+    return $options;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function formElement(FieldItemListInterface $items, $delta, array $element, array &$form, FormStateInterface $form_state) {
-    return $element;
+  public function massageFormValues(array $values, array $form, FormStateInterface $form_state) {
+    $result = [];
+
+    if (isset($values['grouping_table'])) {
+      // Trier par poids (ordre du drag and drop)
+      $sorted = $values['grouping_table'];
+      uasort($sorted, function ($a, $b) {
+        return $a['weight'] <=> $b['weight'];
+      });
+
+      foreach ($sorted as $row) {
+        if (!empty($row['field'])) {
+          $result[] = ['value' => $row['field']];
+        }
+      }
+    }
+
+    return $result;
   }
 
 }

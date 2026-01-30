@@ -8,11 +8,13 @@ dependencies:
     - field.field.node.media_album_av.field_media_album_av_directory
     - field.field.node.media_album_av.field_media_album_av_event
     - field.field.node.media_album_av.field_media_album_av_event_group
+    - field.field.node.media_album_av.field_media_album_av_grouping
     - field.field.node.media_album_av.field_media_album_av_media
     - node.type.media_album_av
   module:
     - datetime
     - lightgallery
+    - options
     - text
     - user
 _core:
@@ -51,7 +53,7 @@ content:
     settings:
       link: true
     third_party_settings: {  }
-    weight: 6
+    weight: 5
     region: content
   field_media_album_av_event:
     type: entity_reference_label
@@ -69,6 +71,13 @@ content:
     third_party_settings: {  }
     weight: 2
     region: content
+  field_media_album_av_grouping:
+    type: list_key
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 6
+    region: content
   field_media_album_av_media:
     type: media_lightgallery_thumbnail
     label: above
@@ -80,7 +89,7 @@ content:
       custom_settings: {  }
       caption_view_mode: null
     third_party_settings: {  }
-    weight: 5
+    weight: 7
     region: content
 hidden:
   entity_print_view_epub: true

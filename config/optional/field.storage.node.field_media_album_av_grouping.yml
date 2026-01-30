@@ -1,0 +1,19 @@
+langcode: en
+status: true
+dependencies:
+  module:
+    - node
+id: node.field_media_album_av_grouping
+field_name: field_media_album_av_grouping
+entity_type: node
+type: list_string
+settings:
+  allowed_values: {  }
+  allowed_values_function: 'Drupal\media_album_av_common\Service\AlbumGroupingFieldsService::getFieldOptionsForField'
+module: options
+locked: false
+cardinality: -1
+translatable: false
+indexes: {  }
+persist_with_no_fields: false
+custom_storage: false

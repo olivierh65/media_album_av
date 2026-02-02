@@ -6,11 +6,10 @@ dependencies:
 id: node.field_media_album_av_grouping
 field_name: field_media_album_av_grouping
 entity_type: node
-type: list_string
+type: string_long
 settings:
-  allowed_values: {  }
-  allowed_values_function: 'Drupal\media_album_av_common\Service\AlbumGroupingFieldsService::getFieldOptionsForField'
-module: options
+  case_sensitive: false
+module: core
 locked: false
 cardinality: -1
 translatable: false

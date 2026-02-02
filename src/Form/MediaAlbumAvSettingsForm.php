@@ -108,6 +108,33 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     ];
 
     // ==========================================
+    // 1a. ALBUM GROUPING SETTINGS
+    // ==========================================
+    $form['grouping'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Album Grouping Settings'),
+      '#group' => 'tabs',
+      '#open' => FALSE,
+    ];
+
+    $form['grouping']['description'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . $this->t('Configure the field that stores grouping and term ordering configuration for albums.') . '</p>',
+    ];
+
+    // Get available fields for the node that can store grouping configuration.
+    $node_grouping_config_field = $this->getNodeStringLongFields();
+
+    $form['grouping']['grouping_config_field'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Grouping Configuration Field'),
+      '#description' => $this->t('Select which field in the node stores the grouping hierarchy and term weights. Should be a "Long text" field.'),
+      '#options' => $node_grouping_config_field,
+      '#default_value' => $config->get('grouping_config_field') ?? 'field_media_album_av_grouping',
+      '#required' => TRUE,
+    ];
+
+    // ==========================================
     // 1b. ALBUM CREATION SETTINGS
     // ==========================================
     $form['album'] = [
@@ -374,6 +401,9 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     // Save the node authors field selection.
     $config->set('node_authors_field', $values['global']['node_authors_field']);
 
+    // Save grouping settings.
+    $config->set('grouping_config_field', $values['grouping']['grouping_config_field']);
+
     // Save album settings.
     $config->set('album_content_type', $values['album']['album_content_type']);
     $config->set('event_group_vocabulary', $values['album']['event_group_vocabulary']);
@@ -479,6 +509,26 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     foreach ($stream_wrappers as $scheme => $wrapper_info) {
       $label = $wrapper_info['name'] ?? ucfirst($scheme);
       $options[$scheme] = $label . ' (' . $scheme . '://)';
+    }
+
+    return $options;
+  }
+
+  /**
+   * Get string_long fields from the media_album_av node type.
+   *
+   * @return array
+   *   Array of string_long field options.
+   */
+  private function getNodeStringLongFields() {
+    $options = [];
+
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions('node', 'media_album_av');
+
+    foreach ($field_definitions as $field_name => $field_def) {
+      if ($field_def->getType() === 'string_long') {
+        $options[$field_name] = $field_def->getLabel() ?: $field_name;
+      }
     }
 
     return $options;

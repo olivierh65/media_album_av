@@ -12,7 +12,9 @@ dependencies:
     - image.style.large
     - media.type.media_album_av_photo
   module:
+    - geocoder_field
     - image
+    - taxonomy
 _core:
   default_config_hash: '-CYEpLWSoOEJ0wJt4P5ngvF0KATTILK-MFXNFoy4_Aw'
 id: media.media_album_av_photo.default
@@ -20,6 +22,46 @@ targetEntityType: media
 bundle: media_album_av_photo
 mode: default
 content:
+  field_media_album_av_author:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 6
+    region: content
+  field_media_album_av_category:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 5
+    region: content
+  field_media_album_av_description:
+    type: geocoder_geocode_formatter
+    label: above
+    settings:
+      dumper: wkt
+      providers: {  }
+    third_party_settings: {  }
+    weight: 2
+    region: content
+  field_media_album_av_event:
+    type: entity_reference_label
+    label: above
+    settings:
+      link: true
+    third_party_settings: {  }
+    weight: 4
+    region: content
+  field_media_album_av_event_group:
+    type: entity_reference_rss_category
+    label: above
+    settings: {  }
+    third_party_settings: {  }
+    weight: 3
+    region: content
   field_media_album_av_photo:
     type: image
     label: visually_hidden
@@ -31,17 +73,20 @@ content:
     third_party_settings: {  }
     weight: 0
     region: content
+  field_media_album_av_title:
+    type: geocoder_geocode_formatter
+    label: above
+    settings:
+      dumper: wkt
+      providers: {  }
+    third_party_settings: {  }
+    weight: 1
+    region: content
 hidden:
   created: true
   entity_print_view_epub: true
   entity_print_view_pdf: true
   entity_print_view_word_docx: true
-  field_media_album_av_author: true
-  field_media_album_av_category: true
-  field_media_album_av_description: true
-  field_media_album_av_event: true
-  field_media_album_av_event_group: true
-  field_media_album_av_title: true
   langcode: true
   name: true
   thumbnail: true

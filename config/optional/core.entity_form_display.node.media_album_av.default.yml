@@ -8,7 +8,6 @@ dependencies:
     - field.field.node.media_album_av.field_media_album_av_description
     - field.field.node.media_album_av.field_media_album_av_directory
     - field.field.node.media_album_av.field_media_album_av_event
-    - field.field.node.media_album_av.field_media_album_av_event_group
     - field.field.node.media_album_av.field_media_album_av_grouping
     - field.field.node.media_album_av.field_media_album_av_media
     - node.type.media_album_av
@@ -61,16 +60,6 @@ content:
   field_media_album_av_event:
     type: entity_reference_autocomplete
     weight: 2
-    region: content
-    settings:
-      match_operator: CONTAINS
-      match_limit: 10
-      size: 60
-      placeholder: ''
-    third_party_settings: {  }
-  field_media_album_av_event_group:
-    type: entity_reference_autocomplete
-    weight: 3
     region: content
     settings:
       match_operator: CONTAINS

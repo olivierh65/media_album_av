@@ -55,13 +55,6 @@ content:
     third_party_settings: {  }
     weight: 4
     region: content
-  field_media_album_av_event_group:
-    type: entity_reference_rss_category
-    label: above
-    settings: {  }
-    third_party_settings: {  }
-    weight: 3
-    region: content
   field_media_album_av_photo:
     type: image
     label: visually_hidden
@@ -86,6 +79,7 @@ hidden:
   created: true
   entity_print_view_epub: true
   entity_print_view_pdf: true
+  field_media_album_av_event_group: true
   entity_print_view_word_docx: true
   langcode: true
   name: true

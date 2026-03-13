@@ -166,7 +166,8 @@ class CreateAlbumForm extends FormBase {
     // ==========================================
     $form['taxonomy'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Event & Category'),
+      '#title' => $this->t('Event '),
+      '#description' => $this->t('Select the event associated with this album. You can also manage the taxonomy terms directly from the tree (add, edit, delete, rearrange).'),
       '#collapsible' => FALSE,
     ];
 
@@ -175,49 +176,14 @@ class CreateAlbumForm extends FormBase {
     $form['#attached']['library'][] = 'media_album_av/taxonomy-manager-inline';
 
     // Get configured vocabularies.
-    $event_group_vocab = $this->albumConfig->getEventGroupVocabulary();
     $event_vocab = $this->albumConfig->getEventVocabulary();
 
-    // Event Group & Event Taxonomies - Two columns container.
+    // Event Taxonomy - Single column container.
     $form['taxonomy']['trees'] = [
       '#type' => 'container',
       '#tree' => TRUE,
-      '#attributes' => ['class' => ['taxonomy-inline-two-columns']],
+      '#attributes' => ['class' => ['taxonomy-inline-one-column']],
     ];
-
-    // Event Group Taxonomy - Integrated jsTree.
-    if ($event_group_vocab) {
-      $form['taxonomy']['trees']['event_group'] = [
-        '#type' => 'container',
-        '#tree' => TRUE,
-        '#attributes' => ['class' => ['form-group', 'taxonomy-inline-tree', 'taxonomy-column']],
-      ];
-
-      $form['taxonomy']['trees']['event_group']['title'] = [
-        '#type' => 'markup',
-        '#markup' => '<label>' . $this->t('Event Group') . '</label>',
-      ];
-
-      $form['taxonomy']['trees']['event_group']['tree'] = [
-        '#type' => 'container',
-        '#attributes' => [
-          'id' => 'taxonomy-tree-event-group',
-          'class' => ['taxonomy-inline-tree-container'],
-          'data-vocabulary-id' => $event_group_vocab,
-          'data-vocabulary-label' => 'Event Group',
-        ],
-      ];
-
-      $form['taxonomy']['trees']['event_group']['selected'] = [
-        '#type' => 'hidden',
-        '#default_value' => '',
-        '#attributes' => [
-          'id' => 'event-group-selected',
-          'class' => ['taxonomy-selected-value'],
-          'data-vocabulary-id' => $event_group_vocab,
-        ],
-      ];
-    }
 
     // Event Taxonomy - Integrated jsTree.
     if ($event_vocab) {
@@ -258,7 +224,8 @@ class CreateAlbumForm extends FormBase {
     // ==========================================
     $form['storage'] = [
       '#type' => 'fieldset',
-      '#title' => $this->t('Media Directory'),
+      '#title' => $this->t('Preferred Media Directory'),
+      '#description' => $this->t('Select the preferred media directory for this album. You can also manage the directories directly from the tree (add, edit, delete, rearrange).'),
       '#collapsible' => FALSE,
     ];
 
@@ -438,19 +405,13 @@ class CreateAlbumForm extends FormBase {
     try {
       // Get configured content type and vocabularies.
       $content_type = $this->albumConfig->getAlbumContentType();
-      $event_group_vocab = $this->albumConfig->getEventGroupVocabulary();
       $event_vocab = $this->albumConfig->getEventVocabulary();
       $directory_vocab = $this->albumConfig->getPreferredMediaDirectoryVocabulary();
 
       // Get the selected taxonomy terms from hidden fields.
-      // These fields now contain JSON with selected_id and hierarchy.
-      $event_group_selected = NULL;
       $event_selected = NULL;
       $directory_selected = NULL;
 
-      if ($event_group_vocab && isset($values['taxonomy']['trees']['event_group']['selected'])) {
-        $event_group_selected = $values['taxonomy']['trees']['event_group']['selected'];
-      }
       if ($event_vocab && isset($values['taxonomy']['trees']['event']['selected'])) {
         $event_selected = $values['taxonomy']['trees']['event']['selected'];
       }
@@ -459,22 +420,13 @@ class CreateAlbumForm extends FormBase {
       }
 
       // Parse JSON if available, otherwise use old format (backward compatibility).
-      $event_group_data = $this->parseHierarchyData($event_group_selected);
       $event_data = $this->parseHierarchyData($event_selected);
       $directory_data = $this->parseHierarchyData($directory_selected);
 
-      $event_group_id = $event_group_data['selected_id'];
       $event_id = $event_data['selected_id'];
       $directory_selected = $directory_data['selected_id'];
 
       // Validate that we have selected terms if vocabularies are configured.
-      if ($event_group_vocab && !$event_group_id) {
-        $this->messenger->addError(
-          $this->t('Please select an Event Group from the taxonomy tree.')
-        );
-        return;
-      }
-
       if ($event_vocab && !$event_id) {
         $this->messenger->addError(
           $this->t('Please select an Event from the taxonomy tree.')
@@ -510,13 +462,6 @@ class CreateAlbumForm extends FormBase {
       }
 
       // Add taxonomy references if configured.
-      if ($event_group_vocab && $event_group_id) {
-        $event_group_field = $this->albumConfig->getEventGroupField();
-        $node_data[$event_group_field] = [
-          'target_id' => $event_group_id,
-        ];
-      }
-
       if ($event_vocab && $event_id) {
         $event_field = $this->albumConfig->getEventField();
         $node_data[$event_field] = [

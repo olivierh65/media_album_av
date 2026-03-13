@@ -384,3 +384,23 @@
     width: 100%;
   }
 }
+
+
+/* Nœuds de niveau 1 : curseur différent pour indiquer non-sélectionnable */
+.taxonomy-inline-tree-container .jstree-container-ul > li > .jstree-wholerow {
+  cursor: default;
+  opacity: 0.85;
+}
+
+/* Empêcher le highlight de sélection sur niveau 1 */
+.taxonomy-inline-tree-container .jstree-container-ul > li > .jstree-anchor {
+  font-weight: bold;
+  cursor: pointer; /* reste cliquable pour ouvrir/fermer */
+  color: #333;
+}
+
+/* Feedback visuel : niveau 2 sélectionné */
+.taxonomy-inline-tree-container .jstree-container-ul > li > ul > li.jstree-clicked > .jstree-anchor,
+.taxonomy-inline-tree-container .jstree-container-ul > li > ul > li > .jstree-wholerow-clicked {
+  background: #d0e8ff;
+}

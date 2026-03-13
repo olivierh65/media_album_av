@@ -6,7 +6,7 @@
  */
 
 (function (Drupal, $) {
-  'use strict';
+  "use strict";
 
   /**
    * Initialize inline taxonomy managers.
@@ -14,16 +14,20 @@
   Drupal.behaviors.mediaAlbumAvTaxonomyManagerInline = {
     attach: function (context) {
       // Initialize each taxonomy tree container using Drupal 10 once() syntax
-      once('taxonomy-tree-inline', '.taxonomy-inline-tree-container', context).forEach(function (element) {
+      once(
+        "taxonomy-tree-inline",
+        ".taxonomy-inline-tree-container",
+        context,
+      ).forEach(function (element) {
         const container = $(element);
-        const vocabularyId = container.data('vocabulary-id');
-        const vocabularyLabel = container.data('vocabulary-label');
+        const vocabularyId = container.data("vocabulary-id");
+        const vocabularyLabel = container.data("vocabulary-label");
 
         if (vocabularyId) {
           initializeTaxonomyTree(container, vocabularyId, vocabularyLabel);
         }
       });
-    }
+    },
   };
 
   /**
@@ -42,12 +46,17 @@
       return 0;
     }
 
-    const nodes = jstreeInstance.get_json('#', { flat: true });
+    const nodes = jstreeInstance.get_json("#", { flat: true });
     let siblingCount = 0;
 
     nodes.forEach(function (node) {
       if (node.data && node.data.term_id) {
-        const nodeParentId = node.parent === '#' ? 0 : (nodes.find(n => n.id === node.parent) ? nodes.find(n => n.id === node.parent).data.term_id : 0);
+        const nodeParentId =
+          node.parent === "#"
+            ? 0
+            : nodes.find((n) => n.id === node.parent)
+              ? nodes.find((n) => n.id === node.parent).data.term_id
+              : 0;
         if (nodeParentId === parentId) {
           siblingCount++;
         }
@@ -72,11 +81,11 @@
     }
 
     // Get parent node ID
-    let parentNodeId = '#'; // Root
+    let parentNodeId = "#"; // Root
     if (parentId !== 0) {
       // Find parent node
-      const nodes = jstreeInstance.get_json('#', { flat: false });
-      const parentNode = findNodeById(nodes, 'node_' + parentId);
+      const nodes = jstreeInstance.get_json("#", { flat: false });
+      const parentNode = findNodeById(nodes, "node_" + parentId);
       if (parentNode) {
         parentNodeId = parentNode.id;
       }
@@ -98,30 +107,30 @@
   }
 
   /**
- * Recalcule les poids des enfants d’un parent jsTree.
- * Le poids repart à 0 pour chaque parent.
- */
-function jstreeRecalculateSiblingWeights(tree, parentNodeId) {
-  const parentNode = tree.get_node(parentNodeId);
-  if (!parentNode || !parentNode.children) {
-    return;
+   * Recalcule les poids des enfants d’un parent jsTree.
+   * Le poids repart à 0 pour chaque parent.
+   */
+  function jstreeRecalculateSiblingWeights(tree, parentNodeId) {
+    const parentNode = tree.get_node(parentNodeId);
+    if (!parentNode || !parentNode.children) {
+      return;
+    }
+
+    parentNode.children.forEach((childId, index) => {
+      const childNode = tree.get_node(childId);
+      if (childNode && childNode.data) {
+        childNode.data.weight = index;
+      }
+    });
   }
 
-  parentNode.children.forEach((childId, index) => {
-    const childNode = tree.get_node(childId);
-    if (childNode && childNode.data) {
-      childNode.data.weight = index;
-    }
-  });
-}
-
-/**
- * Retourne le poids suivant pour un parent (création).
- */
-function jstreeGetNextWeight(tree, parentNodeId) {
-  const parentNode = tree.get_node(parentNodeId);
-  return parentNode?.children?.length || 0;
-}
+  /**
+   * Retourne le poids suivant pour un parent (création).
+   */
+  function jstreeGetNextWeight(tree, parentNodeId) {
+    const parentNode = tree.get_node(parentNodeId);
+    return parentNode?.children?.length || 0;
+  }
 
   /**
    * Find a node by ID in the tree structure.
@@ -163,12 +172,17 @@ function jstreeGetNextWeight(tree, parentNodeId) {
     }
 
     const hierarchy = [];
-    const nodes = jstreeInstance.get_json('#', { flat: true });
+    const nodes = jstreeInstance.get_json("#", { flat: true });
 
     nodes.forEach(function (node) {
       if (node.data && node.data.term_id) {
-        const parentNode = nodes.find(n => n.id === node.parent);
-        const parentId = node.parent === '#' ? 0 : (parentNode && parentNode.data ? parentNode.data.term_id : 0);
+        const parentNode = nodes.find((n) => n.id === node.parent);
+        const parentId =
+          node.parent === "#"
+            ? 0
+            : parentNode && parentNode.data
+              ? parentNode.data.term_id
+              : 0;
         hierarchy.push({
           id: node.data.term_id,
           parent_id: parentId,
@@ -191,14 +205,18 @@ function jstreeGetNextWeight(tree, parentNodeId) {
   function reloadTaxonomyTree(container, vocabularyId) {
     // Destroy existing jstree instance completely
     if (container.jstree(true)) {
-      container.jstree('destroy');
+      container.jstree("destroy");
     }
 
     // Clear the container
     container.empty();
 
     // Reinitialize the tree with fresh data
-    initializeTaxonomyTree(container, vocabularyId, container.data('vocabulary-label'));
+    initializeTaxonomyTree(
+      container,
+      vocabularyId,
+      container.data("vocabulary-label"),
+    );
   }
 
   /**
@@ -212,43 +230,64 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The vocabulary label.
    */
   function initializeTaxonomyTree(container, vocabularyId, vocabularyLabel) {
-    const apiUrl = '/admin/content/media-album/taxonomy/' + vocabularyId + '/api';  // Keep for media_album_av specific modal
+    const apiUrl =
+      "/admin/content/media-album/taxonomy/" + vocabularyId + "/api"; // Keep for media_album_av specific modal
 
     // Find the corresponding hidden field within the parent form element
     let selectedField = null;
 
     // Look for hidden field in the immediate parent container
-    selectedField = container.parent().find('input[type="hidden"][data-vocabulary-id], input[type="hidden"].taxonomy-selected-value, input[type="hidden"].storage-selected-value');
+    selectedField = container
+      .parent()
+      .find(
+        'input[type="hidden"][data-vocabulary-id], input[type="hidden"].taxonomy-selected-value, input[type="hidden"].storage-selected-value',
+      );
 
     if (!selectedField.length) {
       // If not found, look in ancestor fieldsets or containers
-      const parentContainer = container.closest('[data-tree-type], fieldset');
-      selectedField = parentContainer.find('input[type="hidden"][data-vocabulary-id], input[type="hidden"].taxonomy-selected-value, input[type="hidden"].storage-selected-value');
+      const parentContainer = container.closest("[data-tree-type], fieldset");
+      selectedField = parentContainer.find(
+        'input[type="hidden"][data-vocabulary-id], input[type="hidden"].taxonomy-selected-value, input[type="hidden"].storage-selected-value',
+      );
     }
 
     // Show loading state
-    container.addClass('loading').html('<div class="tree-loading">' + Drupal.t('Loading...') + '</div>');
+    container
+      .addClass("loading")
+      .html('<div class="tree-loading">' + Drupal.t("Loading...") + "</div>");
 
     // Load tree data via AJAX
     $.ajax({
       url: apiUrl,
-      type: 'GET',
-      dataType: 'json',
+      type: "GET",
+      dataType: "json",
       success: function (data) {
-        container.removeClass('loading').empty();
+        container.removeClass("loading").empty();
 
         // Handle empty taxonomy: create a virtual root node
         if (!data || (Array.isArray(data) && data.length === 0)) {
           // Add helper message and a button to create first term
-          const emptyMsg = $('<div class="taxonomy-empty-message">' +
-            '<p>' + Drupal.t('This vocabulary is empty.') + '</p>' +
-            '<button type="button" class="btn btn-primary add-root-term">' +
-            Drupal.t('Create first term') + '</button>' +
-            '</div>');
+          const emptyMsg = $(
+            '<div class="taxonomy-empty-message">' +
+              "<p>" +
+              Drupal.t("This vocabulary is empty.") +
+              "</p>" +
+              '<button type="button" class="btn btn-primary add-root-term">' +
+              Drupal.t("Create first term") +
+              "</button>" +
+              "</div>",
+          );
 
-          emptyMsg.find('.add-root-term').on('click', function (e) {
+          emptyMsg.find(".add-root-term").on("click", function (e) {
             e.preventDefault();
-            openTermModal('add', null, 0, vocabularyId, vocabularyLabel, container);
+            openTermModal(
+              "add",
+              null,
+              0,
+              vocabularyId,
+              vocabularyLabel,
+              container,
+            );
           });
 
           container.append(emptyMsg);
@@ -257,26 +296,33 @@ function jstreeGetNextWeight(tree, parentNodeId) {
 
         // Initialize jsTree
         container.jstree({
-          'core': {
-            'data': data,
-            'check_callback': true,
-            'themes': {
-              'name': 'default',
-              'icons': true,
-              'stripes': true,
+          core: {
+            data: data,
+            check_callback: true,
+            themes: {
+              name: "default",
+              icons: true,
+              stripes: true,
             },
           },
-          'plugins': ['wholerow', 'contextmenu', 'dnd', 'state'],
-          'contextmenu': {
-            'items': function (node) {
+          plugins: ["wholerow", "contextmenu", "dnd", "state"],
+          contextmenu: {
+            items: function (node) {
               // Handle root node (#) - only show 'Add term' option
-              if (node.id === '#') {
+              if (node.id === "#") {
                 return {
-                  'add': {
-                    'label': Drupal.t('Add term'),
-                    'icon': 'fa fa-plus',
-                    'action': function (obj) {
-                      openTermModal('add', null, 0, vocabularyId, vocabularyLabel, container);
+                  add: {
+                    label: Drupal.t("Add term"),
+                    icon: "fa fa-plus",
+                    action: function (obj) {
+                      openTermModal(
+                        "add",
+                        null,
+                        0,
+                        vocabularyId,
+                        vocabularyLabel,
+                        container,
+                      );
                     },
                   },
                 };
@@ -284,39 +330,43 @@ function jstreeGetNextWeight(tree, parentNodeId) {
 
               // Regular nodes - show all options
               const items = {
-                'add': {
-                  'label': Drupal.t('Add term'),
-                  'icon': 'fa fa-plus',
-                  'action': function (obj) {
+                add: {
+                  label: Drupal.t("Add term"),
+                  icon: "fa fa-plus",
+                  action: function (obj) {
                     openTermModal(
-                      'add',
+                      "add",
                       null,
                       node.data.term_id,
                       vocabularyId,
                       vocabularyLabel,
-                      container
+                      container,
                     );
                   },
                 },
-                'edit': {
-                  'label': Drupal.t('Edit term'),
-                  'icon': 'fa fa-edit',
-                  'action': function (obj) {
+                edit: {
+                  label: Drupal.t("Edit term"),
+                  icon: "fa fa-edit",
+                  action: function (obj) {
                     openTermModal(
-                      'edit',
+                      "edit",
                       node.data.term_id,
                       node.data.term_id,
                       vocabularyId,
                       vocabularyLabel,
-                      container
+                      container,
                     );
                   },
                 },
-                'delete': {
-                  'label': Drupal.t('Delete term'),
-                  'icon': 'fa fa-trash',
-                  'action': function (obj) {
-                    if (confirm(Drupal.t('Are you sure you want to delete this term?'))) {
+                delete: {
+                  label: Drupal.t("Delete term"),
+                  icon: "fa fa-trash",
+                  action: function (obj) {
+                    if (
+                      confirm(
+                        Drupal.t("Are you sure you want to delete this term?"),
+                      )
+                    ) {
                       deleteTerm(node.data.term_id, container, vocabularyId);
                     }
                   },
@@ -325,78 +375,102 @@ function jstreeGetNextWeight(tree, parentNodeId) {
               return items;
             },
           },
-          'dnd': {
-            'copy': false,
-            'is_draggable': true,
-            'drag_delay': 10,
-            'drag_finish': true,
+          dnd: {
+            copy: false,
+            is_draggable: true,
+            drag_delay: 10,
+            drag_finish: true,
           },
         });
 
         // After jstree is fully loaded, allow right-click on tree background
-        container.on('ready.jstree', function (e, data) {
+        container.on("ready.jstree", function (e, data) {
           const jstreeInstance = container.jstree(true);
           // Show context menu on root when right-clicking the background
-          container.on('contextmenu.jstree-contextmenu', function (e) {
+          container.on("contextmenu.jstree-contextmenu", function (e) {
             // This is handled by jstree's contextmenu plugin
           });
         });
 
         // Handle node selection - capture complete hierarchy
-        container.on('select_node.jstree', function (e, data) {
+        container.on("select_node.jstree", function (e, data) {
           // Debug: log if field was found
           if (selectedField.length === 0) {
-            console.error('Hidden field not found for vocabulary:', vocabularyId);
-            console.error('Container:', container);
+            console.error(
+              "Hidden field not found for vocabulary:",
+              vocabularyId,
+            );
+            console.error("Container:", container);
             return;
           }
 
+          if (e.type === "select_node") {
+            const node = data.node;
+            const tree = container.jstree(true);
+            const parentId = node.parent;
+
+            // Niveau 1 = parent est '#' (racine)
+            if (parentId === "#") {
+              // Annuler la sélection immédiatement
+              tree.deselect_node(node);
+
+              // Optionnel : ouvrir/fermer le nœud au clic
+              if (tree.is_open(node)) {
+                tree.close_node(node);
+              } else {
+                tree.open_node(node);
+              }
+              return false;
+            }
+          }
+          // Niveau 2 : comportement normal de sélection
+
           // Store selected ID and build complete hierarchy
-          selectedField.data('last-selected-id', data.node.data.term_id);
+          selectedField.data("last-selected-id", data.node.data.term_id);
           const hierarchy = buildTreeHierarchy(container);
           const value = JSON.stringify({
             selected_id: data.node.data.term_id,
             hierarchy: hierarchy,
           });
 
-          console.log('Setting hidden field value:', value);
+          console.log("Setting hidden field value:", value);
           selectedField.val(value);
-          console.log('Hidden field value after set:', selectedField.val());
+          console.log("Hidden field value after set:", selectedField.val());
 
           // Visual feedback
-          container.find('.jstree-node').removeClass('selected');
-          container.find('#' + data.node.id).addClass('selected');
+          container.find(".jstree-node").removeClass("selected");
+          container.find("#" + data.node.id).addClass("selected");
         });
 
         // Handle drag & drop (reparenting) - save to server AND recalculate weights
-        container.on('move_node.jstree', function (e, data) {
-
+        container.on("move_node.jstree", function (e, data) {
           const tree = $(this).jstree(true);
 
-  // Recalculer les poids pour l'ancien parent et le nouveau parent
-  if (data.old_parent !== data.parent) {
-    jstreeRecalculateSiblingWeights(tree, data.old_parent);
-  }
-  jstreeRecalculateSiblingWeights(tree, data.parent);
+          // Recalculer les poids pour l'ancien parent et le nouveau parent
+          if (data.old_parent !== data.parent) {
+            jstreeRecalculateSiblingWeights(tree, data.old_parent);
+          }
+          jstreeRecalculateSiblingWeights(tree, data.parent);
 
-  // Construire weightsToUpdate pour tous les enfants affectés
-  const weightsToUpdate = {};
-  [data.old_parent, data.parent].forEach(parentNodeId => {
-    const parentNode = tree.get_node(parentNodeId);
-    if (!parentNode) return;
-    parentNode.children.forEach(childId => {
-      const childNode = tree.get_node(childId);
-      if (childNode?.data?.term_id) {
-        weightsToUpdate[childNode.data.term_id] = childNode.data.weight;
-      }
-    });
-  });
+          // Construire weightsToUpdate pour tous les enfants affectés
+          const weightsToUpdate = {};
+          [data.old_parent, data.parent].forEach((parentNodeId) => {
+            const parentNode = tree.get_node(parentNodeId);
+            if (!parentNode) return;
+            parentNode.children.forEach((childId) => {
+              const childNode = tree.get_node(childId);
+              if (childNode?.data?.term_id) {
+                weightsToUpdate[childNode.data.term_id] = childNode.data.weight;
+              }
+            });
+          });
 
-  // Infos pour l’ajax
-  const nodeId = data.node.data.term_id;
-  const newParentId = data.parent === '#' ? 0 : tree.get_node(data.parent).data.term_id;
+          // Infos pour l’ajax
+          const nodeId = data.node.data.term_id;
+          const newParentId =
+            data.parent === "#" ? 0 : tree.get_node(data.parent).data.term_id;
 
-  /*
+          /*
           const nodeId = data.node.data.term_id;
           const newParentId = data.parent === '#' ? 0 : container.jstree().get_node(data.parent).data.term_id;
           const oldParentId = data.old_parent === '#' ? 0 : (container.jstree().get_node(data.old_parent) ? container.jstree().get_node(data.old_parent).data.term_id : 0);
@@ -422,9 +496,9 @@ function jstreeGetNextWeight(tree, parentNodeId) {
 */
           // Save the new parent and weights to server
           $.ajax({
-            url: '/admin/media_album_av_common/directory/move-term',
-            type: 'POST',
-            contentType: 'application/json',
+            url: "/admin/media_album_av_common/directory/move-term",
+            type: "POST",
+            contentType: "application/json",
             data: JSON.stringify({
               term_id: nodeId,
               parent_id: newParentId,
@@ -432,28 +506,34 @@ function jstreeGetNextWeight(tree, parentNodeId) {
             }),
             success: function (response) {
               if (!response.success) {
-                showMessage('Error moving term', 'error');
-                container.jstree('refresh');
+                showMessage("Error moving term", "error");
+                container.jstree("refresh");
               } else {
                 // Update hierarchy field after successful move
                 const hierarchy = buildTreeHierarchy(container);
-                selectedField.val(JSON.stringify({
-                  selected_id: selectedField.data('last-selected-id') || null,
-                  hierarchy: hierarchy,
-                }));
+                selectedField.val(
+                  JSON.stringify({
+                    selected_id: selectedField.data("last-selected-id") || null,
+                    hierarchy: hierarchy,
+                  }),
+                );
               }
             },
             error: function () {
-              showMessage('Error moving term', 'error');
-              container.jstree('refresh');
+              showMessage("Error moving term", "error");
+              container.jstree("refresh");
             },
           });
         });
       },
       error: function () {
-        container.removeClass('loading').html(
-          '<div class="alert alert-error">' + Drupal.t('Error loading taxonomy tree.') + '</div>'
-        );
+        container
+          .removeClass("loading")
+          .html(
+            '<div class="alert alert-error">' +
+              Drupal.t("Error loading taxonomy tree.") +
+              "</div>",
+          );
       },
     });
   }
@@ -474,21 +554,46 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    * @param {jQuery} treeContainer
    *   The tree container element.
    */
-  function openTermModal(mode, termId, parentId, vocabularyId, vocabularyLabel, treeContainer) {
+  function openTermModal(
+    mode,
+    termId,
+    parentId,
+    vocabularyId,
+    vocabularyLabel,
+    treeContainer,
+  ) {
     // Create modal HTML
-    const modalId = 'taxonomy-term-modal-' + (termId || 'new');
-    let termName = '';
-    let termDescription = '';
+    const modalId = "taxonomy-term-modal-" + (termId || "new");
+    let termName = "";
+    let termDescription = "";
 
     // If editing, load the term data
-    if (mode === 'edit' && termId) {
+    if (mode === "edit" && termId) {
       loadTermData(termId, function (termData) {
-        termName = termData.name || '';
-        termDescription = termData.description || '';
-        showTermModal(modalId, mode, termName, termDescription, termId, parentId, vocabularyId, treeContainer);
+        termName = termData.name || "";
+        termDescription = termData.description || "";
+        showTermModal(
+          modalId,
+          mode,
+          termName,
+          termDescription,
+          termId,
+          parentId,
+          vocabularyId,
+          treeContainer,
+        );
       });
     } else {
-      showTermModal(modalId, mode, termName, termDescription, termId, parentId, vocabularyId, treeContainer);
+      showTermModal(
+        modalId,
+        mode,
+        termName,
+        termDescription,
+        termId,
+        parentId,
+        vocabularyId,
+        treeContainer,
+      );
     }
   }
 
@@ -512,12 +617,21 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    * @param {jQuery} treeContainer
    *   The tree container element.
    */
-  function showTermModal(modalId, mode, termName, termDescription, termId, parentId, vocabularyId, treeContainer) {
-    const isEdit = mode === 'edit';
-    const title = isEdit ? Drupal.t('Edit term') : Drupal.t('Add term');
+  function showTermModal(
+    modalId,
+    mode,
+    termName,
+    termDescription,
+    termId,
+    parentId,
+    vocabularyId,
+    treeContainer,
+  ) {
+    const isEdit = mode === "edit";
+    const title = isEdit ? Drupal.t("Edit term") : Drupal.t("Add term");
 
     // Remove existing modal if present
-    $('#' + modalId).remove();
+    $("#" + modalId).remove();
 
     // Create modal HTML
     const modalHtml = `
@@ -559,50 +673,70 @@ function jstreeGetNextWeight(tree, parentNodeId) {
     `;
 
     // Add modal to page
-    $('body').append(modalHtml);
-    const modal = $('#' + modalId);
+    $("body").append(modalHtml);
+    const modal = $("#" + modalId);
 
     // Show modal with animation
     setTimeout(() => {
-      modal.addClass('show');
+      modal.addClass("show");
       modal.find('input[type="text"]').focus();
     }, 10);
 
     // Handle form submission
-    modal.find('form').on('submit', function (e) {
+    modal.find("form").on("submit", function (e) {
       e.preventDefault();
 
-      const formName = modal.find('#' + modalId + '-name').val().trim();
-      const formDescription = modal.find('#' + modalId + '-description').val().trim();
+      const formName = modal
+        .find("#" + modalId + "-name")
+        .val()
+        .trim();
+      const formDescription = modal
+        .find("#" + modalId + "-description")
+        .val()
+        .trim();
 
       if (!formName) {
-        showMessage('Term name is required', 'error');
+        showMessage("Term name is required", "error");
         return;
       }
 
       // Submit based on mode
       if (isEdit) {
-        updateTerm(termId, formName, formDescription, treeContainer, vocabularyId, modal);
+        updateTerm(
+          termId,
+          formName,
+          formDescription,
+          treeContainer,
+          vocabularyId,
+          modal,
+        );
       } else {
-        addTerm(formName, formDescription, parentId, vocabularyId, treeContainer, modal);
+        addTerm(
+          formName,
+          formDescription,
+          parentId,
+          vocabularyId,
+          treeContainer,
+          modal,
+        );
       }
     });
 
     // Handle close button
-    modal.find('.modal-close, .modal-cancel').on('click', function () {
+    modal.find(".modal-close, .modal-cancel").on("click", function () {
       closeModal(modal);
     });
 
     // Handle overlay click to close
-    modal.find('.modal-overlay').on('click', function () {
+    modal.find(".modal-overlay").on("click", function () {
       closeModal(modal);
     });
 
     // Handle Escape key
-    $(document).on('keydown.taxonomy-modal-' + modalId, function (e) {
-      if (e.key === 'Escape') {
+    $(document).on("keydown.taxonomy-modal-" + modalId, function (e) {
+      if (e.key === "Escape") {
         closeModal(modal);
-        $(document).off('keydown.taxonomy-modal-' + modalId);
+        $(document).off("keydown.taxonomy-modal-" + modalId);
       }
     });
   }
@@ -614,7 +748,7 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The modal element.
    */
   function closeModal(modal) {
-    modal.removeClass('show');
+    modal.removeClass("show");
     setTimeout(() => {
       modal.remove();
     }, 300);
@@ -636,15 +770,22 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    * @param {jQuery} modal
    *   The modal element.
    */
-  function addTerm(name, description, parentId, vocabularyId, treeContainer, modal) {
+  function addTerm(
+    name,
+    description,
+    parentId,
+    vocabularyId,
+    treeContainer,
+    modal,
+  ) {
     // Calculate weight based on sibling count
     const weight = calculateTermWeight(treeContainer, parentId || 0);
-    const url = '/admin/media_album_av_common/directory/create-term';
+    const url = "/admin/media_album_av_common/directory/create-term";
 
     $.ajax({
       url: url,
-      type: 'POST',
-      contentType: 'application/json',
+      type: "POST",
+      contentType: "application/json",
       data: JSON.stringify({
         name: name,
         description: description,
@@ -655,18 +796,18 @@ function jstreeGetNextWeight(tree, parentNodeId) {
       }),
       success: function (response) {
         if (response.success) {
-          showMessage(Drupal.t('Term added successfully'), 'success');
+          showMessage(Drupal.t("Term added successfully"), "success");
           closeModal(modal);
 
           // Completely reload tree with fresh data
           reloadTaxonomyTree(treeContainer, vocabularyId);
         } else {
-          showMessage(response.error || Drupal.t('Error adding term'), 'error');
+          showMessage(response.error || Drupal.t("Error adding term"), "error");
         }
       },
       error: function (xhr) {
-        const error = xhr.responseJSON?.error || Drupal.t('Error adding term');
-        showMessage(error, 'error');
+        const error = xhr.responseJSON?.error || Drupal.t("Error adding term");
+        showMessage(error, "error");
       },
     });
   }
@@ -687,13 +828,20 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    * @param {jQuery} modal
    *   The modal element.
    */
-  function updateTerm(termId, name, description, treeContainer, vocabularyId, modal) {
-    const url = '/admin/media_album_av_common/directory/update-term';
+  function updateTerm(
+    termId,
+    name,
+    description,
+    treeContainer,
+    vocabularyId,
+    modal,
+  ) {
+    const url = "/admin/media_album_av_common/directory/update-term";
 
     $.ajax({
       url: url,
-      type: 'POST',
-      contentType: 'application/json',
+      type: "POST",
+      contentType: "application/json",
       data: JSON.stringify({
         term_id: termId,
         name: name,
@@ -701,18 +849,22 @@ function jstreeGetNextWeight(tree, parentNodeId) {
       }),
       success: function (response) {
         if (response.success) {
-          showMessage(Drupal.t('Term updated successfully'), 'success');
+          showMessage(Drupal.t("Term updated successfully"), "success");
           closeModal(modal);
 
           // Completely reload tree with fresh data
           reloadTaxonomyTree(treeContainer, vocabularyId);
         } else {
-          showMessage(response.error || Drupal.t('Error updating term'), 'error');
+          showMessage(
+            response.error || Drupal.t("Error updating term"),
+            "error",
+          );
         }
       },
       error: function (xhr) {
-        const error = xhr.responseJSON?.error || Drupal.t('Error updating term');
-        showMessage(error, 'error');
+        const error =
+          xhr.responseJSON?.error || Drupal.t("Error updating term");
+        showMessage(error, "error");
       },
     });
   }
@@ -728,28 +880,32 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The vocabulary ID.
    */
   function deleteTerm(termId, treeContainer, vocabularyId) {
-    const url = '/admin/media_album_av_common/directory/delete-term';
+    const url = "/admin/media_album_av_common/directory/delete-term";
 
     $.ajax({
       url: url,
-      type: 'POST',
-      contentType: 'application/json',
+      type: "POST",
+      contentType: "application/json",
       data: JSON.stringify({
         term_id: termId,
       }),
       success: function (response) {
         if (response.success) {
-          showMessage(Drupal.t('Term deleted successfully'), 'success');
+          showMessage(Drupal.t("Term deleted successfully"), "success");
 
           // Completely reload tree with fresh data
           reloadTaxonomyTree(treeContainer, vocabularyId);
         } else {
-          showMessage(response.error || Drupal.t('Error deleting term'), 'error');
+          showMessage(
+            response.error || Drupal.t("Error deleting term"),
+            "error",
+          );
         }
       },
       error: function (xhr) {
-        const error = xhr.responseJSON?.error || Drupal.t('Error deleting term');
-        showMessage(error, 'error');
+        const error =
+          xhr.responseJSON?.error || Drupal.t("Error deleting term");
+        showMessage(error, "error");
       },
     });
   }
@@ -764,18 +920,18 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    */
   function loadTermData(termId, callback) {
     $.ajax({
-      url: '/admin/media_album_av_common/directory/get-term/' + termId,
-      type: 'GET',
-      dataType: 'json',
+      url: "/admin/media_album_av_common/directory/get-term/" + termId,
+      type: "GET",
+      dataType: "json",
       success: function (response) {
         if (response.success) {
           callback(response.data);
         } else {
-          callback({ name: '', description: '' });
+          callback({ name: "", description: "" });
         }
       },
       error: function () {
-        callback({ name: '', description: '' });
+        callback({ name: "", description: "" });
       },
     });
   }
@@ -789,18 +945,19 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The message type: 'success', 'error', 'info'.
    */
   function showMessage(message, type) {
-    const alertClass = 'alert-' + type;
-    const messageHtml = '<div class="alert ' + alertClass + '">' + message + '</div>';
+    const alertClass = "alert-" + type;
+    const messageHtml =
+      '<div class="alert ' + alertClass + '">' + message + "</div>";
 
     // Remove existing alert
-    $('.taxonomy-inline-alert').remove();
+    $(".taxonomy-inline-alert").remove();
 
     // Add new alert
-    const alert = $(messageHtml).addClass('taxonomy-inline-alert');
-    $('body').prepend(alert);
+    const alert = $(messageHtml).addClass("taxonomy-inline-alert");
+    $("body").prepend(alert);
 
     // Auto-remove after 4 seconds
-    if (type === 'success') {
+    if (type === "success") {
       setTimeout(() => {
         alert.fadeOut(function () {
           $(this).remove();
@@ -819,9 +976,8 @@ function jstreeGetNextWeight(tree, parentNodeId) {
    *   The escaped text.
    */
   function escapeHtml(text) {
-    const div = document.createElement('div');
+    const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
   }
-
 })(Drupal, jQuery);

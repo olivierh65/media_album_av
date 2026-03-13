@@ -3,17 +3,18 @@ status: true
 dependencies:
   module:
     - media
-    - taxonomy
 id: media.field_media_album_av_event_group
 field_name: field_media_album_av_event_group
 entity_type: media
-type: entity_reference
+type: string
 settings:
-  target_type: taxonomy_term
+  max_length: 255
+  is_ascii: false
+  case_sensitive: false
 module: core
 locked: false
 cardinality: 1
-translatable: true
+translatable: false
 indexes: {  }
 persist_with_no_fields: false
 custom_storage: false

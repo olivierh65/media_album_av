@@ -38,18 +38,6 @@ class AlbumConfigService {
   }
 
   /**
-   * Get the configured event group vocabulary.
-   *
-   * @return string|null
-   *   The vocabulary ID or NULL if not configured.
-   */
-  public function getEventGroupVocabulary() {
-    $config = $this->configFactory->get('media_album_av.settings');
-    $vocab = $config->get('event_group_vocabulary');
-    return !empty($vocab) ? $vocab : NULL;
-  }
-
-  /**
    * Get the configured event vocabulary.
    *
    * @return string|null
@@ -82,17 +70,6 @@ class AlbumConfigService {
   public function getDateField() {
     $config = $this->configFactory->get('media_album_av.settings');
     return $config->get('date_field') ?? 'field_media_album_av_date';
-  }
-
-  /**
-   * Get the configured event group field name.
-   *
-   * @return string
-   *   The field name (defaults to 'field_media_album_av_event_group').
-   */
-  public function getEventGroupField() {
-    $config = $this->configFactory->get('media_album_av.settings');
-    return $config->get('event_group_field') ?? 'field_media_album_av_event_group';
   }
 
   /**

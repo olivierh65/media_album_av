@@ -165,16 +165,6 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     // Get available vocabularies.
     $vocabularies = $this->getVocabularies();
 
-    $form['album']['event_group_vocabulary'] = [
-      '#type' => 'select',
-      '#title' => $this->t('Event Group Vocabulary'),
-      '#description' => $this->t('Select the taxonomy vocabulary to use for Event Group (optional).'),
-      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
-      '#default_value' => $config->get('event_group_vocabulary') ??
-      (array_key_exists('media_album_av_event_group', $vocabularies) ? 'media_album_av_event_group' : NULL) ?? '',
-      '#required' => FALSE,
-    ];
-
     $form['album']['event_vocabulary'] = [
       '#type' => 'select',
       '#title' => $this->t('Event Vocabulary'),
@@ -406,7 +396,6 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
 
     // Save album settings.
     $config->set('album_content_type', $values['album']['album_content_type']);
-    $config->set('event_group_vocabulary', $values['album']['event_group_vocabulary']);
     $config->set('event_vocabulary', $values['album']['event_vocabulary']);
     $config->set('prefered_media_type_photo', $values['album']['prefered_media_type_photo']);
     $config->set('prefered_media_type_video', $values['album']['prefered_media_type_video']);

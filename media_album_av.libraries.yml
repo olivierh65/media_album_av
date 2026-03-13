@@ -15,8 +15,6 @@ media-album-editor-widget:
       css/media-album-editor-widget.css: {}
   dependencies:
     - core/drupal
-    - media_drop/draggable_flexgrid
-    - media_drop/media_drop_manage_image
 
 taxonomy-manager:
   css:
@@ -70,7 +68,6 @@ media_editor:
     - core/drupal
     - core/jquery
     - core/once
-      css/album_check.css: {}
 
 media-light-table:
   version: 1.x

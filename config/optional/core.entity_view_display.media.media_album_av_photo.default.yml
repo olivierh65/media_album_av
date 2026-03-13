@@ -14,7 +14,6 @@ dependencies:
   module:
     - geocoder_field
     - image
-    - taxonomy
 _core:
   default_config_hash: '-CYEpLWSoOEJ0wJt4P5ngvF0KATTILK-MFXNFoy4_Aw'
 id: media.media_album_av_photo.default
@@ -55,6 +54,14 @@ content:
     third_party_settings: {  }
     weight: 4
     region: content
+  field_media_album_av_event_group:
+    type: string
+    label: above
+    settings:
+      link_to_entity: false
+    third_party_settings: {  }
+    weight: 7
+    region: content
   field_media_album_av_photo:
     type: image
     label: visually_hidden
@@ -79,8 +86,8 @@ hidden:
   created: true
   entity_print_view_epub: true
   entity_print_view_pdf: true
-  field_media_album_av_event_group: true
   entity_print_view_word_docx: true
+  field_media_album_av_ev_group: true
   langcode: true
   name: true
   thumbnail: true

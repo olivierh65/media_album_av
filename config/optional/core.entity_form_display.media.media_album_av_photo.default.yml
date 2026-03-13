@@ -71,7 +71,7 @@ content:
     third_party_settings: {  }
   field_media_album_av_event_group:
     type: string_textfield
-    weight: 5
+    weight: 26
     region: content
     settings:
       size: 60
@@ -111,6 +111,7 @@ content:
 hidden:
   created: true
   exif_inline_data_display: true
+  field_media_album_av_ev_group: true
   langcode: true
   path: true
   uid: true

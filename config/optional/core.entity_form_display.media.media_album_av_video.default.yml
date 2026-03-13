@@ -36,6 +36,14 @@ content:
       size: 60
       placeholder: ''
     third_party_settings: {  }
+  field_media_album_av_event_group:
+    type: string_textfield
+    weight: 26
+    region: content
+    settings:
+      size: 60
+      placeholder: ''
+    third_party_settings: {  }
   field_media_album_av_video:
     type: file_generic
     weight: 0
@@ -86,6 +94,6 @@ hidden:
   field_media_album_av_author: true
   field_media_album_av_category: true
   field_media_album_av_description: true
+  field_media_album_av_ev_group: true
   field_media_album_av_event: true
-  field_media_album_av_event_group: true
   field_media_album_av_title: true

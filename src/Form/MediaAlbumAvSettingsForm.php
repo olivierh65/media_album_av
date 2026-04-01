@@ -228,6 +228,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#title' => $this->t('Media Type Author Fields'),
       '#group' => 'tabs',
       '#open' => FALSE,
+      '#tree' => TRUE,
     ];
 
     $form['media_authors']['description'] = [
@@ -245,12 +246,6 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       ];
       return $form;
     }
-
-    // Create a container for media type settings.
-    $form['author_fields'] = [
-      '#type' => 'container',
-      '#tree' => TRUE,
-    ];
 
     // Load only the accepted media types.
     $media_types = $this->entityTypeManager->getStorage('media_type')->loadMultiple($accepted_bundles);
@@ -284,7 +279,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
         if ($field_def->getType() === 'string' ||
             ($field_def->getType() === 'entity_reference' &&
              $field_def->getSetting('target_type') === 'taxonomy_term')) {
-          $field_options[$field_name] = $field_def->getLabel() ?: $field_name;
+          $field_options[$field_name . '|' . $media_type_id] = $field_def->getLabel() ?: $field_name;
         }
       }
 
@@ -301,8 +296,64 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
         '#type' => 'select',
         '#title' => $this->t('Select author field'),
         '#options' => ['' => $this->t('- None -')] + $field_options,
-        '#default_value' => $config->get('author_fields.' . $media_type_id) ?? $this->getDefaultAuthorField($media_type_id),
+        '#default_value' => $config->get('author_fields.' . $media_type_id) . '|' . $media_type_id ?? $this->getDefaultAuthorField($media_type_id) . '|' . $media_type_id ?? '',
         '#description' => $this->t('Select the field to use as author for this media type.'),
+      ];
+    }
+
+    // ==========================================
+    // 3. MEDIA CATEGORY FIELDS
+    // ==========================================
+    $form['media_categories'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Media Type Category Fields'),
+      '#group' => 'tabs',
+      '#open' => FALSE,
+      '#tree' => TRUE,
+    ];
+
+    $form['media_categories']['description'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . $this->t('Configure which taxonomy field stores the "Category" for each media type, and whether new terms can be auto-created.') . '</p>',
+    ];
+
+    foreach ($media_types_options as $media_type_id => $media_type_label) {
+      $form['media_categories']['category_fields_' . $media_type_id] = [
+        '#type' => 'details',
+        '#title' => $this->t('Category field for @media_type', ['@media_type' => $media_type_label]),
+        '#open' => FALSE,
+      ];
+
+      // Récupérer uniquement les champs entity_reference → taxonomy_term.
+      $media_fields = $field_manager->getFieldDefinitions('media', $media_type_id);
+      $taxonomy_field_options = ['' => $this->t('- None -')];
+
+      foreach ($media_fields as $field_name => $field_def) {
+        if ($field_def->getType() === 'entity_reference' &&
+        $field_def->getSetting('target_type') === 'taxonomy_term') {
+          $taxonomy_field_options[$field_name . '|' . $media_type_id] = $field_def->getLabel() ?: $field_name;
+        }
+      }
+
+      $form['media_categories']['category_fields_' . $media_type_id]['field_name'] = [
+        '#type' => 'select',
+        '#title' => $this->t('Category field'),
+        '#options' => $taxonomy_field_options,
+        '#default_value' => $config->get('category_fields.' . $media_type_id . '.field_name') . '|' . $media_type_id ??
+        $this->getDefaultCategoryField($media_type_id) . '|' . $media_type_id ?? '',
+        '#description' => $this->t('Taxonomy field used as "Category" for this media type.'),
+      ];
+
+      $form['media_categories']['category_fields_' . $media_type_id]['autocreate'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Allow auto-creation of new terms'),
+        '#default_value' => $config->get('category_fields.' . $media_type_id . '.autocreate') ?? FALSE,
+        '#description' => $this->t('If checked, typing a new term name will automatically create it in the vocabulary.'),
+        '#states' => [
+          'invisible' => [
+            ':input[name="media_categories[category_fields_' . $media_type_id . '][field_name]"]' => ['value' => ''],
+          ],
+        ],
       ];
     }
 
@@ -349,6 +400,24 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     }
 
     return $field_options;
+  }
+
+  /**
+   * Get default category field for a media type.
+   *
+   * @param string $media_type_id
+   *   The media type ID.
+   *
+   * @return string
+   *   The default category field name, or empty string if none.
+   */
+  private function getDefaultCategoryField($media_type_id) {
+    $defaults = [
+      'media_album_av_photo' => 'field_media_album_av_photo_category',
+      'media_album_av_video' => 'field_media_album_av_video_category',
+    ];
+
+    return $defaults[$media_type_id] ?? '';
   }
 
   /**
@@ -403,17 +472,44 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('prefered_media_directory', $values['album']['prefered_media_directory']);
 
     // Extract the author_fields from the nested structure.
-    $author_fields = $values['author_fields'] ?? [];
+    $author_fields = $values['media_authors'] ?? [];
 
     // Clean up: only keep entries with non-empty field_name values.
     $cleaned_author_fields = [];
-    foreach ($author_fields as $media_type_id => $settings) {
+    foreach ($author_fields as $key => $settings) {
       if (isset($settings['field_name']) && !empty($settings['field_name'])) {
-        $cleaned_author_fields[$media_type_id] = $settings['field_name'];
+        // Extract media type ID from key if present and field name from value.
+        $parts = explode('|', $settings['field_name']);
+        // Fallback to key if no media type ID in field_name.
+        $media_type_id = array_pop($parts) ?? $key;
+        $field_name = implode('|', $parts);
+        $cleaned_author_fields[$media_type_id] = $field_name;
+      }
+    }
+    $config->set('author_fields', $cleaned_author_fields)->save();
+
+    // Category fields - iterate over the actual structure.
+    $category_fields_raw = $values['media_categories'] ?? [];
+    $cleaned_category_fields = [];
+    foreach ($category_fields_raw as $key => $settings) {
+      // Only process entries that have field_name and autocreate (i.e., actual field config, not metadata)
+      if (isset($settings['field_name']) && !empty($settings['field_name'])) {
+        // Extract media type ID from key if present and field name from value.
+        $parts = explode('|', $settings['field_name']);
+        // Fallback to key if no media type ID in field_name.
+        $media_type_id = array_pop($parts) ?? $key;
+        $field_name = implode('|', $parts);
+        $autocreate = (bool) ($settings['autocreate'] ?? FALSE);
+        if (!empty($field_name)) {
+          $cleaned_category_fields[$media_type_id] = [
+            'field_name' => $field_name,
+            'autocreate' => $autocreate,
+          ];
+        }
       }
     }
 
-    $config->set('author_fields', $cleaned_author_fields)->save();
+    $config->set('category_fields', $cleaned_category_fields)->save();
 
     parent::submitForm($form, $form_state);
   }

@@ -179,3 +179,71 @@ function media_album_av_views_query_alter(ViewExecutable $view, QueryPluginBase 
 
   // Exemple : forcer un filtre sur ton vocabulaire.
 }
+
+
+/**
+ * Implements hook_module_implements_alter().
+ */
+function ___media_album_av_module_implements_alter(&$implementations, $hook) {
+  if ($hook === 'file_download') {
+    // Supprimer le hook de file — on gère nous-mêmes l'accès.
+    unset($implementations['file']);
+  }
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function ___media_album_av_file_download($uri) {
+  $request = \Drupal::request();
+  $token_sent = $request->query->get('s_t');
+  $render_id = $request->query->get('s_id');
+
+  if ($token_sent && $render_id) {
+    $session_id = \Drupal::service('session_manager')->getId();
+    $private_key = \Drupal::service('private_key')->get();
+
+    $expected_token = \Drupal\Component\Utility\Crypt::hmacBase64(
+      $render_id,
+      $session_id . $private_key
+    );
+
+    if (hash_equals($expected_token, $token_sent)) {
+      return [
+        'Content-Type' => \Drupal::service('file.mime_type.guesser')->guessMimeType($uri),
+      ];
+    }
+  }
+
+  // Pas de token valide : on laisse les autres hooks décider,
+  // SAUF si un media est trouvé — dans ce cas on bloque explicitement.
+  $media = _media_album_av_find_media_by_uri($uri);
+  if ($media !== NULL) {
+    // C'est un fichier media, sans token valide → refus.
+    return -1;
+  }
+
+  // Pas un fichier media connu → on ne se prononce pas.
+  return [];
+}
+
+/**
+ * Helper : trouve un media entity à partir d'un URI de fichier.
+ */
+function ___media_album_av_find_media_by_uri(string $uri): ?\Drupal\media\MediaInterface {
+  $file_storage = \Drupal::entityTypeManager()->getStorage('file');
+  $files = $file_storage->loadByProperties(['uri' => $uri]);
+  if (empty($files)) {
+    return NULL;
+  }
+  $file = reset($files);
+
+  $media_storage = \Drupal::entityTypeManager()->getStorage('media');
+  foreach (['field_media_image', 'field_media_video_file'] as $field) {
+    $medias = $media_storage->loadByProperties([$field => $file->id()]);
+    if (!empty($medias)) {
+      return reset($medias);
+    }
+  }
+  return NULL;
+}

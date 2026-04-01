@@ -3,9 +3,18 @@ services:
     class: Drupal\media_album_av\Service\AlbumConfigService
     arguments: ['@config.factory']
 
+  media_album_av.configured_fields:
+    class: Drupal\media_album_av\Service\ConfiguredFieldsService
+    arguments: ['@config.factory']
+
   media_album_av.integrity_checker:
     class: Drupal\media_album_av\Service\MediaAlbumAvIntegrityChecker
 
   media_album_av.checker:
     class: Drupal\media_album_av\Service\MediaAlbumAvChecker
     arguments: ['@entity_type.manager', '@file_system']
+
+  media_album_av.route_subscriber:
+    class: Drupal\media_album_av\Routing\RouteSubscriber
+    tags:
+      - { name: event_subscriber }

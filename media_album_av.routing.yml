@@ -12,7 +12,7 @@ media_album_av.create_album:
     _form: '\Drupal\media_album_av\Form\CreateAlbumForm'
     _title: 'Create Media Album'
   requirements:
-    _permission: 'create media_album_av content'
+    _permission: 'media_album_av.create_album'
 
 media_album_av.taxonomy_manager:
   path: '/admin/content/media-album/taxonomy/{vocabulary_id}'
@@ -20,7 +20,7 @@ media_album_av.taxonomy_manager:
     _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::modal'
     _title: 'Manage Taxonomy'
   requirements:
-    _permission: 'create media_album_av content'
+    _permission: 'media_album_av.create_album'
     vocabulary_id: '[a-z_]+'
 
 media_album_av.taxonomy_manager_content:
@@ -28,7 +28,7 @@ media_album_av.taxonomy_manager_content:
   defaults:
     _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::modalContent'
   requirements:
-    _permission: 'create media_album_av content'
+    _permission: 'media_album_av.create_album'
     vocabulary_id: '[a-z_]+'
     _method: 'GET'
 
@@ -37,7 +37,7 @@ media_album_av.taxonomy_manager_api:
   defaults:
     _controller: '\Drupal\media_album_av\Controller\TaxonomyManagerController::getTreeJson'
   requirements:
-    _permission: 'create media_album_av content'
+    _permission: 'media_album_av.create_album'
     vocabulary_id: '[a-z_]+'
     _method: 'GET'
 

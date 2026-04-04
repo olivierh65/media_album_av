@@ -10,9 +10,18 @@ album_content_type: media_album_av
 event_vocabulary: media_album_av_event
 date_field: field_media_album_av_date
 event_field: field_media_album_av_event
-author_fields: {  }
+author_fields:
+  media_album_av_photo: field_media_album_av_author
+  media_album_av_video: field_media_album_av_author
 prefered_media_type_photo: media_album_av_photo
 prefered_media_type_video: media_album_av_video
 prefered_storage_location: private
 prefered_media_directory: media_album_av_folders
 grouping_config_field: field_media_album_av_grouping
+category_fields:
+  media_album_av_photo:
+    field_name: field_media_album_av_category
+    autocreate: true
+  media_album_av_video:
+    field_name: field_media_album_av_category
+    autocreate: true

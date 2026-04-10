@@ -109,6 +109,10 @@ class ConfiguredFieldsService {
     $author_fields = $config->get('author_fields') ?? [];
 
     if (isset($author_fields[$media_type_id])) {
+      if (is_array($author_fields[$media_type_id])) {
+        return $author_fields[$media_type_id]['field_name'] ?? NULL;
+      }
+      // Handle legacy string format.
       return $author_fields[$media_type_id];
     }
 

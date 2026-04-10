@@ -103,7 +103,17 @@ function media_album_av_entity_presave(EntityInterface $entity) {
         continue;
       }
 
-      $author_field = $author_fields[$media_bundle];
+      // Récupérer le field_name (qui peut être un string ou un array avec field_name et autocreate).
+      $author_field_config = $author_fields[$media_bundle];
+      if (is_array($author_field_config)) {
+        $author_field = $author_field_config['field_name'] ?? NULL;
+      } else {
+        $author_field = $author_field_config;
+      }
+
+      if (!$author_field) {
+        continue;
+      }
 
       // Vérifier que le média a le champ configuré
       if (!$media->hasField($author_field)) {

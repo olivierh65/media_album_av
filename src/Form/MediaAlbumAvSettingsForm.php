@@ -296,8 +296,20 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
         '#type' => 'select',
         '#title' => $this->t('Select author field'),
         '#options' => ['' => $this->t('- None -')] + $field_options,
-        '#default_value' => $config->get('author_fields.' . $media_type_id) . '|' . $media_type_id ?? $this->getDefaultAuthorField($media_type_id) . '|' . $media_type_id ?? '',
+        '#default_value' => $config->get('author_fields.' . $media_type_id . '.field_name') . '|' . $media_type_id ?? $this->getDefaultAuthorField($media_type_id) . '|' . $media_type_id ?? '',
         '#description' => $this->t('Select the field to use as author for this media type.'),
+      ];
+
+      $form['media_authors']['author_fields_' . $media_type_id]['autocreate'] = [
+        '#type' => 'checkbox',
+        '#title' => $this->t('Allow auto-creation of new authors'),
+        '#default_value' => $config->get('author_fields.' . $media_type_id . '.autocreate') ?? FALSE,
+        '#description' => $this->t('If checked, typing a new author name will automatically create it in the vocabulary.'),
+        '#states' => [
+          'invisible' => [
+            ':input[name="media_authors[author_fields_' . $media_type_id . '][field_name]"]' => ['value' => ''],
+          ],
+        ],
       ];
     }
 
@@ -483,7 +495,11 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
         // Fallback to key if no media type ID in field_name.
         $media_type_id = array_pop($parts) ?? $key;
         $field_name = implode('|', $parts);
-        $cleaned_author_fields[$media_type_id] = $field_name;
+        $autocreate = (bool) ($settings['autocreate'] ?? FALSE);
+        $cleaned_author_fields[$media_type_id] = [
+          'field_name' => $field_name,
+          'autocreate' => $autocreate,
+        ];
       }
     }
     $config->set('author_fields', $cleaned_author_fields)->save();

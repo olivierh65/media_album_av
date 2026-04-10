@@ -17,7 +17,6 @@ dependencies:
   - drupal:file
   - drupal:text
   - filefield_paths
-  - readonly_field_widget
   - media_album_av_common
 
 libraries:

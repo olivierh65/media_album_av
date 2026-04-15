@@ -2,6 +2,7 @@
 
 namespace Drupal\media_album_av\Controller;
 
+use Drupal\Core\File\FileSystemInterface;
 use Drupal\image\Controller\ImageStyleDownloadController;
 use Drupal\image\ImageStyleInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -23,12 +24,12 @@ class AlbumImageStyleDownloadController extends ImageStyleDownloadController {
     $source_uri = $scheme . '://' . $request->query->get('file');
     $n_id = $request->query->get('n_id');
     $m_id = $request->query->get('m_id');
-    
-    // Validate n_id is a valid integer before attempting to load
+
+    // Validate n_id is a valid integer before attempting to load.
     if (!is_numeric($n_id) || $n_id <= 0) {
       return parent::deliver($request, $scheme, $image_style, $required_derivative_scheme);
     }
-    
+
     $derivative_uri = $image_style->buildUri($source_uri);
 
     $node = $this->entityTypeManager()
@@ -39,6 +40,28 @@ class AlbumImageStyleDownloadController extends ImageStyleDownloadController {
       if ($scheme === 'private' && $this->validateHmac($request)) {
         $file_system = \Drupal::service('file_system');
         $realpath = $file_system->realpath($derivative_uri);
+
+        // Si la vignette n'existe pas encore, tenter de la générer avant fallback.
+        if (!$realpath || !file_exists($realpath)) {
+          try {
+            $source_realpath = $file_system->realpath($source_uri);
+            if ($source_realpath && file_exists($source_realpath)) {
+              $directory = $file_system->dirname($derivative_uri);
+              $file_system->prepareDirectory(
+                $directory,
+                FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS
+              );
+              $image_style->createDerivative($source_uri, $derivative_uri);
+              $realpath = $file_system->realpath($derivative_uri);
+            }
+          }
+          catch (\Exception $e) {
+            \Drupal::logger('media_album_av')->warning('Thumbnail generation failed for @uri: @error', [
+              '@uri' => $source_uri,
+              '@error' => $e->getMessage(),
+            ]);
+          }
+        }
 
         if ($realpath && file_exists($realpath)) {
           $headers = [

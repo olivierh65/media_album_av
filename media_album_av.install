@@ -97,3 +97,42 @@ $delete=false;
   \Drupal::messenger()->addStatus(t('Module uninstalled. Created content is preserved.'));
   }
 }
+
+/**
+ * Remove legacy caption field from media_album_av content type.
+ */
+function media_album_av_update_10301() {
+  $bundle = 'media_album_av';
+  $field_name = 'field_media_album_av_caption';
+
+  // Remove the component from displays if present.
+  $form_display = EntityFormDisplay::load("node.{$bundle}.default");
+  if ($form_display) {
+    $form_display->removeComponent($field_name);
+    $form_display->save();
+  }
+
+  $view_display = EntityViewDisplay::load("node.{$bundle}.default");
+  if ($view_display) {
+    $view_display->removeComponent($field_name);
+    $view_display->save();
+  }
+
+  $field_config = FieldConfig::loadByName('node', $bundle, $field_name);
+  if ($field_config) {
+    $field_config->delete();
+  }
+
+  $field_storage = FieldStorageConfig::loadByName('node', $field_name);
+  if ($field_storage) {
+    $field_storage->delete();
+  }
+
+  // Ensure caption setting points to an existing default field.
+  \Drupal::configFactory()
+    ->getEditable('media_album_av.settings')
+    ->set('caption_field', 'field_media_album_av_description')
+    ->save();
+
+  return t('Legacy caption field removed from media_album_av content type.');
+}

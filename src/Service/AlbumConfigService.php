@@ -84,6 +84,17 @@ class AlbumConfigService {
   }
 
   /**
+   * Get the configured caption field name.
+   *
+   * @return string
+   *   The field name (defaults to 'field_media_album_av_description').
+   */
+  public function getCaptionField() {
+    $config = $this->configFactory->get('media_album_av.settings');
+    return $config->get('caption_field') ?? 'field_media_album_av_description';
+  }
+
+  /**
    *
    */
   public function getDirectoryField() {

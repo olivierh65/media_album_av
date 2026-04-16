@@ -95,8 +95,10 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#markup' => '<p>' . $this->t('Configure author field mapping for media types.') . '</p>',
     ];
 
-    // Get available fields for the node that can store authors.
-    $node_author_field = $this->getNodeAuthorFields();
+    $album_content_type = $config->get('album_content_type') ?? 'media_album_av';
+
+    // Get available fields for the configured album content type.
+    $node_author_field = $this->getNodeAuthorFields($album_content_type);
 
     $form['global']['node_authors_field'] = [
       '#type' => 'select',
@@ -172,6 +174,16 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
       '#default_value' => $config->get('event_vocabulary') ??
       (array_key_exists('media_album_av_event', $vocabularies) ? 'media_album_av_event' : NULL) ?? '',
+      '#required' => FALSE,
+    ];
+
+    $node_caption_fields = $this->getNodeAuthorFields($album_content_type);
+    $form['album']['caption_field'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Album Caption Field'),
+      '#description' => $this->t('Select the node field used for album caption text.'),
+      '#options' => ['' => '- ' . $this->t('None') . ' -'] + $node_caption_fields,
+      '#default_value' => $config->get('caption_field') ?? 'field_media_album_av_description',
       '#required' => FALSE,
     ];
 
@@ -396,9 +408,9 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
    * @return array
    *   Array of field names suitable for storing authors.
    */
-  private function getNodeAuthorFields() {
+  private function getNodeAuthorFields(string $content_type = 'media_album_av') {
     $field_manager = $this->entityFieldManager;
-    $node_fields = $field_manager->getFieldDefinitions('node', 'media_album_av');
+    $node_fields = $field_manager->getFieldDefinitions('node', $content_type);
     $field_options = [];
 
     foreach ($node_fields as $field_name => $field_def) {
@@ -478,6 +490,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     // Save album settings.
     $config->set('album_content_type', $values['album']['album_content_type']);
     $config->set('event_vocabulary', $values['album']['event_vocabulary']);
+    $config->set('caption_field', $values['album']['caption_field']);
     $config->set('prefered_media_type_photo', $values['album']['prefered_media_type_photo']);
     $config->set('prefered_media_type_video', $values['album']['prefered_media_type_video']);
     $config->set('prefered_storage_location', $values['album']['prefered_storage_location']);

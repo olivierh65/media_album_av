@@ -161,6 +161,29 @@ class CreateAlbumForm extends FormBase {
       '#description' => $this->t('Select the date for the album (without time).'),
     ];
 
+    $content_type = $this->albumConfig->getAlbumContentType();
+    $caption_fields = $this->getAlbumTextFields($content_type);
+    $default_caption_field = $this->albumConfig->getCaptionField();
+    // Default may be stored as plain field_name (legacy); find matching key.
+    $default_caption_key = isset($caption_fields[$default_caption_field]) ? $default_caption_field : '';
+    if (empty($default_caption_key)) {
+      foreach (array_keys($caption_fields) as $key) {
+        if (substr($key, strpos($key, '|') + 1) === $default_caption_field) {
+          $default_caption_key = $key;
+          break;
+        }
+      }
+    }
+
+    $form['album_info']['caption_field'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Caption target field'),
+      '#options' => ['' => $this->t('- None -')] + $caption_fields,
+      '#default_value' => $default_caption_key,
+      '#required' => FALSE,
+      '#description' => $this->t('Select the album field where the caption will be stored.'),
+    ];
+
     // ==========================================
     // 2. TAXONOMY REFERENCES - With integrated jsTree
     // ==========================================
@@ -497,6 +520,33 @@ class CreateAlbumForm extends FormBase {
         ])
       );
     }
+  }
+
+  /**
+   * Get text-compatible fields for the configured album content type.
+   *
+   * @param string $content_type
+   *   The content type machine name.
+   *
+   * @return array
+   *   A list of eligible fields keyed by machine name.
+   */
+  private function getAlbumTextFields(string $content_type): array {
+    $field_options = [];
+    $field_definitions = $this->entityFieldManager
+      ->getFieldDefinitions('node', $content_type);
+
+    foreach ($field_definitions as $field_name => $field_def) {
+      $field_type = $field_def->getType();
+      $is_text = in_array($field_type, ['string', 'string_long', 'text', 'text_long', 'text_with_summary']);
+      $is_date = in_array($field_type, ['datetime', 'daterange', 'timestamp', 'created', 'changed']);
+      $is_taxo = $field_type === 'entity_reference' && $field_def->getSetting('target_type') === 'taxonomy_term';
+      if ($is_text || $is_date || $is_taxo) {
+        $field_options[$field_type . '|' . $field_name] = $field_def->getLabel() ?: $field_name;
+      }
+    }
+
+    return $field_options;
   }
 
   /**

@@ -8,6 +8,7 @@ uuid: null
 node_authors_field: field_media_album_av_authors
 album_content_type: media_album_av
 event_vocabulary: media_album_av_event
+caption_field: null
 date_field: field_media_album_av_date
 event_field: field_media_album_av_event
 author_fields:

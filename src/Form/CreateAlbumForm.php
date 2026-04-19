@@ -162,8 +162,11 @@ class CreateAlbumForm extends FormBase {
     ];
 
     $content_type = $this->albumConfig->getAlbumContentType();
+    $grouping_config_field = $this->getGroupingConfigField();
+    $grouping_defaults = $this->getGroupingDefaultsFromContentType($content_type, $grouping_config_field);
+
     $caption_fields = $this->getAlbumTextFields($content_type);
-    $default_caption_field = $this->albumConfig->getCaptionField();
+    $default_caption_field = $grouping_defaults['caption_field'] ?: $this->albumConfig->getCaptionField();
     // Default may be stored as plain field_name (legacy); find matching key.
     $default_caption_key = isset($caption_fields[$default_caption_field]) ? $default_caption_field : '';
     if (empty($default_caption_key)) {
@@ -177,11 +180,61 @@ class CreateAlbumForm extends FormBase {
 
     $form['album_info']['caption_field'] = [
       '#type' => 'select',
-      '#title' => $this->t('Caption target field'),
+      '#title' => $this->t('Cover caption field'),
       '#options' => ['' => $this->t('- None -')] + $caption_fields,
       '#default_value' => $default_caption_key,
       '#required' => FALSE,
-      '#description' => $this->t('Select the album field where the caption will be stored.'),
+      '#description' => $this->t('Select the node field used as caption for the cover image only.'),
+    ];
+
+    $media_caption_fields = $this->getMediaCaptionFields($content_type);
+    $default_media_caption = $grouping_defaults['media_caption_field'];
+    $default_media_caption_key = isset($media_caption_fields[$default_media_caption]) ? $default_media_caption : '';
+    if (empty($default_media_caption_key) && !empty($default_media_caption)) {
+      foreach (array_keys($media_caption_fields) as $key) {
+        if (substr($key, strpos($key, '|') + 1) === $default_media_caption) {
+          $default_media_caption_key = $key;
+          break;
+        }
+      }
+    }
+
+    $form['album_info']['media_caption_field'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Media caption field'),
+      '#options' => ['' => $this->t('- None -')] + $media_caption_fields,
+      '#default_value' => $default_media_caption_key,
+      '#required' => FALSE,
+      '#description' => $this->t('Select the media field used as caption for album medias.'),
+    ];
+
+    $image_style_options = $this->getImageStyleOptions();
+    $default_image_style = $grouping_defaults['image_style'] ?: 'media_album_av';
+    if (!isset($image_style_options[$default_image_style])) {
+      $default_image_style = '';
+    }
+
+    $form['album_info']['image_style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Image style'),
+      '#options' => ['' => $this->t('- None -')] + $image_style_options,
+      '#default_value' => $default_image_style,
+      '#required' => FALSE,
+      '#description' => $this->t('Style applied to full-size images in the album gallery.'),
+    ];
+
+    $default_thumbnail_style = $grouping_defaults['thumbnail_style'] ?: 'medium';
+    if (!isset($image_style_options[$default_thumbnail_style])) {
+      $default_thumbnail_style = '';
+    }
+
+    $form['album_info']['thumbnail_style'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Thumbnail style'),
+      '#options' => ['' => $this->t('- None -')] + $image_style_options,
+      '#default_value' => $default_thumbnail_style,
+      '#required' => FALSE,
+      '#description' => $this->t('Style applied to thumbnails in the album gallery.'),
     ];
 
     // ==========================================
@@ -498,6 +551,33 @@ class CreateAlbumForm extends FormBase {
           'target_id' => $directory_selected,
         ];
       }
+
+      $grouping_config_field = $this->getGroupingConfigField();
+      $grouping_config_values = [];
+      if (!empty($values['album_info']['caption_field'])) {
+        $grouping_config_values[] = [
+          'value' => json_encode(['caption_field' => $values['album_info']['caption_field']]),
+        ];
+      }
+      if (!empty($values['album_info']['media_caption_field'])) {
+        $grouping_config_values[] = [
+          'value' => json_encode(['media_caption_field' => $values['album_info']['media_caption_field']]),
+        ];
+      }
+      if (array_key_exists('image_style', $values['album_info'])) {
+        $grouping_config_values[] = [
+          'value' => json_encode(['image_style' => $values['album_info']['image_style'] ?? '']),
+        ];
+      }
+      if (array_key_exists('thumbnail_style', $values['album_info'])) {
+        $grouping_config_values[] = [
+          'value' => json_encode(['thumbnail_style' => $values['album_info']['thumbnail_style'] ?? '']),
+        ];
+      }
+      if (!empty($grouping_config_values)) {
+        $node_data[$grouping_config_field] = $grouping_config_values;
+      }
+
       // Create the node.
       $node = $this->entityTypeManager->getStorage('node')->create($node_data);
 
@@ -547,6 +627,124 @@ class CreateAlbumForm extends FormBase {
     }
 
     return $field_options;
+  }
+
+  /**
+   * Get text/date/taxonomy fields available on accepted media bundles.
+   *
+   * @param string $content_type
+   *   The album content type.
+   *
+   * @return array
+   *   Eligible media caption fields keyed by "type|field_name".
+   */
+  private function getMediaCaptionFields(string $content_type): array {
+    $options = [];
+    $node_fields = $this->entityFieldManager->getFieldDefinitions('node', $content_type);
+    $media_bundles = [];
+
+    foreach ($node_fields as $field_def) {
+      if ($field_def->getType() === 'entity_reference'
+        && $field_def->getSetting('target_type') === 'media') {
+        $handler_settings = $field_def->getSetting('handler_settings') ?? [];
+        foreach (($handler_settings['target_bundles'] ?? []) as $bundle) {
+          $media_bundles[$bundle] = $bundle;
+        }
+      }
+    }
+
+    foreach (array_keys($media_bundles) as $media_bundle) {
+      $media_fields = $this->entityFieldManager->getFieldDefinitions('media', $media_bundle);
+      foreach ($media_fields as $field_name => $field_def) {
+        $field_type = $field_def->getType();
+        $is_text = in_array($field_type, ['string', 'string_long', 'text', 'text_long', 'text_with_summary']);
+        $is_date = in_array($field_type, ['datetime', 'daterange', 'timestamp', 'created', 'changed']);
+        $is_taxo = $field_type === 'entity_reference' && $field_def->getSetting('target_type') === 'taxonomy_term';
+        if ($is_text || $is_date || $is_taxo) {
+          $key = $field_type . '|' . $field_name;
+          if (!isset($options[$key])) {
+            $options[$key] = $field_def->getLabel() ?: $field_name;
+          }
+        }
+      }
+    }
+
+    return $options;
+  }
+
+  /**
+   * Get available image style options.
+   *
+   * @return array
+   *   Image style options keyed by style ID.
+   */
+  private function getImageStyleOptions(): array {
+    $options = [];
+    $styles = $this->entityTypeManager->getStorage('image_style')->loadMultiple();
+    foreach ($styles as $style) {
+      $options[$style->id()] = $style->label();
+    }
+    return $options;
+  }
+
+  /**
+   * Resolve grouping configuration field name from settings.
+   *
+   * @return string
+   *   Grouping configuration field machine name.
+   */
+  private function getGroupingConfigField(): string {
+    return $this->configFactory->get('media_album_av.settings')->get('grouping_config_field')
+      ?? 'field_media_album_av_grouping';
+  }
+
+  /**
+   * Read default grouping options from the node content type field defaults.
+   *
+   * @param string $content_type
+   *   Content type machine name.
+   * @param string $grouping_field
+   *   Grouping config field machine name.
+   *
+   * @return array
+   *   Defaults for caption and style keys.
+   */
+  private function getGroupingDefaultsFromContentType(string $content_type, string $grouping_field): array {
+    $defaults = [
+      'caption_field' => '',
+      'media_caption_field' => '',
+      'image_style' => '',
+      'thumbnail_style' => '',
+    ];
+
+    $field_definitions = $this->entityFieldManager->getFieldDefinitions('node', $content_type);
+    if (empty($field_definitions[$grouping_field])) {
+      return $defaults;
+    }
+
+    try {
+      $default_values = $field_definitions[$grouping_field]->getDefaultValueLiteral();
+      foreach ($default_values as $item) {
+        $value = $item['value'] ?? '';
+        if (empty($value)) {
+          continue;
+        }
+        $decoded = json_decode($value, TRUE);
+        if (!is_array($decoded)) {
+          continue;
+        }
+        foreach (array_keys($defaults) as $key) {
+          if (array_key_exists($key, $decoded)) {
+            $defaults[$key] = (string) $decoded[$key];
+          }
+        }
+      }
+    }
+    catch (\Exception $e) {
+      // Keep empty defaults when field default values are not readable.
+    }
+
+    return $defaults;
   }
 
   /**

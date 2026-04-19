@@ -10,6 +10,10 @@ services:
   media_album_av.integrity_checker:
     class: Drupal\media_album_av\Service\MediaAlbumAvIntegrityChecker
 
+  media_album_av.derivatives_maintenance:
+    class: Drupal\media_album_av\Service\MediaAlbumAvDerivativesMaintenance
+    arguments: ['@entity_type.manager']
+
   media_album_av.checker:
     class: Drupal\media_album_av\Service\MediaAlbumAvChecker
     arguments: ['@entity_type.manager', '@file_system']

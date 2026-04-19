@@ -1,0 +1,15 @@
+uuid: a6bba21d-b0a9-456f-b120-da3b34066f85
+langcode: en
+status: true
+dependencies: {  }
+name: media_album_av
+label: 'Media Album AV'
+effects:
+  a17a7c60-e351-4cff-894f-06e3ca4b51a7:
+    uuid: a17a7c60-e351-4cff-894f-06e3ca4b51a7
+    id: image_scale
+    weight: 1
+    data:
+      width: 3200
+      height: null
+      upscale: false

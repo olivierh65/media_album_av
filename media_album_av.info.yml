@@ -1,7 +1,7 @@
 name: Media Album AV
 type: module
 description: 'Media Album AV module to manage media albums with audio and video support.'
-core_version_requirement: ^10
+core_version_requirement: ^10 || ^11
 package: Custom
 config_devel:
   install:

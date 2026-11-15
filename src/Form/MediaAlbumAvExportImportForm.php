@@ -135,23 +135,90 @@ class MediaAlbumAvExportImportForm extends FormBase {
       return;
     }
 
-    $stats = $this->exportImport->exportAlbum($nid, $destination);
-    $message = $this->t(
-      'Export done. Medias: @medias, files: @files, terms: @terms, errors: @errors. Package: @destination',
-      [
-        '@medias' => $stats['medias'],
-        '@files' => $stats['files'],
-        '@terms' => $stats['terms'],
-        '@errors' => $stats['errors'],
-        '@destination' => $destination,
-      ]
-    );
-
-    if (!empty($stats['archive'])) {
-      $url = \Drupal::service('file_url_generator')->generateAbsoluteString($stats['archive']);
-      $message .= ' ' . $this->t('<a href=":url">Download the .zip archive</a>.', [':url' => $url]);
+    $manifest = $this->exportImport->prepareExport($nid, $destination);
+    if ($manifest === NULL) {
+      $this->messenger()->addError($this->t('Could not prepare the export package.'));
+      return;
     }
-    $this->messenger()->addStatus($message);
+
+    $operations = [];
+    foreach ($manifest['mids'] as $mid) {
+      $operations[] = [
+        [static::class, 'processExportMedia'],
+        [$manifest, $mid],
+      ];
+    }
+    // Finalize even with zero media (writes manifest + archive).
+    $operations[] = [
+      [static::class, 'finishExport'],
+      [$manifest],
+    ];
+
+    batch_set([
+      'title' => $this->t('Exporting album @nid', ['@nid' => $nid]),
+      'operations' => $operations,
+      'finished' => [static::class, 'finishedExport'],
+      'file' => \Drupal::service('extension.list.module')->getPath('media_album_av') . '/src/Form/MediaAlbumAvExportImportForm.php',
+    ]);
+  }
+
+  /**
+   * Batch operation: exports a single media.
+   */
+  public static function processExportMedia(array $manifest, int $mid, array &$context): void {
+    $service = \Drupal::service('media_album_av.export_import');
+    if (!isset($context['results']['manifest'])) {
+      $context['results']['manifest'] = $manifest;
+      $context['results']['stats'] = ['medias' => 0, 'files' => 0, 'errors' => 0];
+    }
+
+    $result = $service->exportSingleMedia($context['results']['manifest'], $mid);
+    foreach ($result as $key => $value) {
+      $context['results']['stats'][$key] += $value;
+    }
+    $context['message'] = t('Exported media @mid.', ['@mid' => $mid]);
+  }
+
+  /**
+   * Batch operation: writes the manifest and creates the archive.
+   */
+  public static function finishExport(array $manifest, array &$context): void {
+    $service = \Drupal::service('media_album_av.export_import');
+    // Merge medias exported by previous operations.
+    if (isset($context['results']['manifest']['medias'])) {
+      $manifest['medias'] = $context['results']['manifest']['medias'];
+    }
+    $final = $service->finalizeExport($manifest);
+    $context['results']['stats']['terms'] = $final['terms'];
+    $context['results']['archive'] = $final['archive'];
+    $context['results']['destination'] = $manifest['destination'];
+  }
+
+  /**
+   * Batch finished callback for export.
+   */
+  public static function finishedExport(bool $success, array $results, array $operations): void {
+    $stats = $results['stats'] ?? ['medias' => 0, 'files' => 0, 'errors' => 0, 'terms' => 0];
+    if ($success) {
+      $message = t(
+        'Export done. Medias: @medias, files: @files, terms: @terms, errors: @errors. Package: @destination',
+        [
+          '@medias' => $stats['medias'],
+          '@files' => $stats['files'],
+          '@terms' => $stats['terms'] ?? 0,
+          '@errors' => $stats['errors'],
+          '@destination' => $results['destination'] ?? '',
+        ]
+      );
+      if (!empty($results['archive'])) {
+        $url = \Drupal::service('file_url_generator')->generateAbsoluteString($results['archive']);
+        $message .= ' ' . t('<a href=":url">Download the .zip archive</a>.', [':url' => $url]);
+      }
+      \Drupal::messenger()->addStatus($message);
+    }
+    else {
+      \Drupal::messenger()->addError(t('Export did not complete. Check the logs.'));
+    }
   }
 
   /**
@@ -169,12 +236,7 @@ class MediaAlbumAvExportImportForm extends FormBase {
         $this->messenger()->addError($this->t('Uploaded archive not found.'));
         return;
       }
-      $extract_dir = 'temporary://album-import-' . time();
-      if (!$this->exportImport->extractArchive($file->getFileUri(), $extract_dir)) {
-        $this->messenger()->addError($this->t('Could not extract the archive.'));
-        return;
-      }
-      $source = $extract_dir;
+      $source = $file->getFileUri();
     }
 
     if ($source === '') {
@@ -182,17 +244,84 @@ class MediaAlbumAvExportImportForm extends FormBase {
       return;
     }
 
-    $stats = $this->exportImport->importAlbum($source, (string) $form_state->getValue('target_scheme'));
-    $this->messenger()->addStatus($this->t(
-      'Import done. New album NID: @nid, medias: @medias, files: @files, terms created: @terms, errors: @errors.',
-      [
-        '@nid' => $stats['nid'],
-        '@medias' => $stats['medias'],
-        '@files' => $stats['files'],
-        '@terms' => $stats['terms_created'],
-        '@errors' => $stats['errors'],
-      ]
-    ));
+    $target_scheme = (string) $form_state->getValue('target_scheme');
+    $state = $this->exportImport->prepareImport($source);
+    if ($state === NULL) {
+      $this->messenger()->addError($this->t('Could not read the package (manifest.json missing or invalid).'));
+      return;
+    }
+
+    $operations = [];
+    foreach (array_keys($state['manifest']['medias'] ?? []) as $index) {
+      $operations[] = [
+        [static::class, 'processImportMedia'],
+        [$state, $index, $target_scheme],
+      ];
+    }
+    $operations[] = [
+      [static::class, 'finishImport'],
+      [$state],
+    ];
+
+    batch_set([
+      'title' => $this->t('Importing album package'),
+      'operations' => $operations,
+      'finished' => [static::class, 'finishedImport'],
+      'file' => \Drupal::service('extension.list.module')->getPath('media_album_av') . '/src/Form/MediaAlbumAvExportImportForm.php',
+    ]);
+  }
+
+  /**
+   * Batch operation: imports a single media entry.
+   */
+  public static function processImportMedia(array $state, int $index, string $target_scheme, array &$context): void {
+    $service = \Drupal::service('media_album_av.export_import');
+    if (!isset($context['results']['state'])) {
+      $context['results']['state'] = $state;
+      $context['results']['stats'] = ['medias' => 0, 'files' => 0, 'errors' => $state['errors']];
+      $context['results']['terms'] = count($state['manifest']['terms'] ?? []);
+    }
+
+    $result = $service->importSingleMedia($context['results']['state'], $index, $target_scheme);
+    foreach ($result as $key => $value) {
+      $context['results']['stats'][$key] += $value;
+    }
+    $context['message'] = t('Imported media entry @index.', ['@index' => $index + 1]);
+  }
+
+  /**
+   * Batch operation: recreates the album node.
+   */
+  public static function finishImport(array $state, array &$context): void {
+    $service = \Drupal::service('media_album_av.export_import');
+    if (isset($context['results']['state'])) {
+      $state = $context['results']['state'];
+    }
+    $final = $service->finalizeImport($state);
+    $context['results']['nid'] = $final['nid'];
+    $context['results']['stats']['errors'] += $final['errors'];
+  }
+
+  /**
+   * Batch finished callback for import.
+   */
+  public static function finishedImport(bool $success, array $results, array $operations): void {
+    $stats = $results['stats'] ?? ['medias' => 0, 'files' => 0, 'errors' => 0];
+    if ($success) {
+      \Drupal::messenger()->addStatus(t(
+        'Import done. New album NID: @nid, medias: @medias, files: @files, terms: @terms, errors: @errors.',
+        [
+          '@nid' => $results['nid'] ?? 0,
+          '@medias' => $stats['medias'],
+          '@files' => $stats['files'],
+          '@terms' => $results['terms'] ?? 0,
+          '@errors' => $stats['errors'],
+        ]
+      ));
+    }
+    else {
+      \Drupal::messenger()->addError(t('Import did not complete. Check the logs.'));
+    }
   }
 
 }

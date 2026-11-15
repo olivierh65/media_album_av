@@ -55,7 +55,217 @@ class MediaAlbumAvExportImport {
   }
 
   /**
+   * Prepares an export package (directories + manifest skeleton).
+   *
+   * @param int $nid
+   *   Album node ID.
+   * @param string $destination
+   *   Destination directory URI.
+   *
+   * @return array|null
+   *   Manifest skeleton with album, terms and media IDs, or NULL on failure.
+   */
+  public function prepareExport(int $nid, string $destination): ?array {
+    $node = $this->entityTypeManager->getStorage('node')->load($nid);
+    if (!$node instanceof NodeInterface || $node->bundle() !== 'media_album_av') {
+      return NULL;
+    }
+
+    $files_dir = $destination . '/files';
+    $destination_copy = $destination;
+    $files_dir_copy = $files_dir;
+    $this->fileSystem->prepareDirectory($destination_copy, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    $this->fileSystem->prepareDirectory($files_dir_copy, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+
+    $term_paths = [];
+    foreach ($this->collectTermIds($node) as $tid) {
+      $path = $this->getTermPath($tid);
+      if ($path !== NULL) {
+        $term_paths[$tid] = $path;
+      }
+    }
+
+    $mids = [];
+    foreach ($node->get('field_media_album_av_media')->referencedEntities() as $media) {
+      if (!$media instanceof MediaInterface) {
+        continue;
+      }
+      $mids[] = (int) $media->id();
+      foreach ($this->collectTermIds($media) as $tid) {
+        if (!isset($term_paths[$tid])) {
+          $path = $this->getTermPath($tid);
+          if ($path !== NULL) {
+            $term_paths[$tid] = $path;
+          }
+        }
+      }
+    }
+
+    return [
+      'version' => 1,
+      'album' => $this->exportNodeFields($node),
+      'terms' => array_values($term_paths),
+      'term_paths' => $term_paths,
+      'mids' => $mids,
+      'medias' => [],
+      'destination' => $destination,
+    ];
+  }
+
+  /**
+   * Exports a single media into a prepared manifest (batch-friendly).
+   *
+   * @param array $manifest
+   *   Manifest skeleton from prepareExport(), passed by reference.
+   * @param int $mid
+   *   Media ID.
+   *
+   * @return array
+   *   Statistics: medias, files, errors.
+   */
+  public function exportSingleMedia(array &$manifest, int $mid): array {
+    $result = ['medias' => 0, 'files' => 0, 'errors' => 0];
+    $media = $this->entityTypeManager->getStorage('media')->load($mid);
+    if (!$media instanceof MediaInterface) {
+      $result['errors']++;
+      return $result;
+    }
+
+    $entry = $this->exportMedia($media, $manifest['destination'] . '/files', $manifest['term_paths'] ?? []);
+    if ($entry === NULL) {
+      $result['errors']++;
+      return $result;
+    }
+
+    $manifest['medias'][] = $entry;
+    $result['medias']++;
+    $result['files'] += count($entry['files']);
+    return $result;
+  }
+
+  /**
+   * Finalizes an export: writes the manifest and creates the archive.
+   *
+   * @param array $manifest
+   *   Manifest built by prepareExport() + exportSingleMedia().
+   *
+   * @return array
+   *   Statistics: terms, archive.
+   */
+  public function finalizeExport(array $manifest): array {
+    $destination = $manifest['destination'];
+    unset($manifest['term_paths'], $manifest['mids'], $manifest['destination']);
+    file_put_contents($destination . '/manifest.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    return [
+      'terms' => count($manifest['terms'] ?? []),
+      'archive' => $this->createArchive($destination),
+    ];
+  }
+
+  /**
+   * Prepares an import: extracts the archive and maps taxonomy terms.
+   *
+   * @param string $source
+   *   Package directory URI or .zip archive URI.
+   *
+   * @return array|null
+   *   Import state (source dir, manifest, tid_map), or NULL on failure.
+   */
+  public function prepareImport(string $source): ?array {
+    if (substr($source, -4) === '.zip') {
+      $extract_dir = 'temporary://album-import-' . time();
+      if (!$this->extractArchive($source, $extract_dir)) {
+        return NULL;
+      }
+      $source = $extract_dir;
+    }
+
+    $manifest_path = rtrim($source, '/') . '/manifest.json';
+    if (!file_exists($manifest_path)) {
+      return NULL;
+    }
+
+    $manifest = json_decode(file_get_contents($manifest_path), TRUE);
+    if (!is_array($manifest) || empty($manifest['album'])) {
+      return NULL;
+    }
+
+    $tid_map = [];
+    $errors = 0;
+    foreach ($manifest['terms'] ?? [] as $term_info) {
+      $tid = $this->ensureTermByPath($term_info);
+      if ($tid !== NULL) {
+        $tid_map[$term_info['tid']] = $tid;
+      }
+      else {
+        $errors++;
+      }
+    }
+
+    return [
+      'source' => rtrim($source, '/'),
+      'manifest' => $manifest,
+      'tid_map' => $tid_map,
+      'mid_map' => [],
+      'errors' => $errors,
+    ];
+  }
+
+  /**
+   * Imports a single media entry (batch-friendly).
+   *
+   * @param array $state
+   *   Import state from prepareImport(), passed by reference.
+   * @param int $index
+   *   Index of the media entry in the manifest.
+   * @param string $target_scheme
+   *   Target scheme for imported files.
+   *
+   * @return array
+   *   Statistics: medias, files, errors.
+   */
+  public function importSingleMedia(array &$state, int $index, string $target_scheme): array {
+    $result = ['medias' => 0, 'files' => 0, 'errors' => 0];
+    $entry = $state['manifest']['medias'][$index] ?? NULL;
+    if ($entry === NULL) {
+      $result['errors']++;
+      return $result;
+    }
+
+    $media = $this->importMedia($entry, $state['source'] . '/files', $target_scheme, $state['tid_map']);
+    if ($media instanceof MediaInterface) {
+      $state['mid_map'][$entry['mid']] = $media->id();
+      $result['medias']++;
+      $result['files'] += count($entry['files'] ?? []);
+    }
+    else {
+      $result['errors']++;
+    }
+
+    return $result;
+  }
+
+  /**
+   * Finalizes an import by recreating the album node.
+   *
+   * @param array $state
+   *   Import state from prepareImport() + importSingleMedia().
+   *
+   * @return array
+   *   Statistics: nid, errors.
+   */
+  public function finalizeImport(array $state): array {
+    $node = $this->importNode($state['manifest']['album'], $state['mid_map'], $state['tid_map']);
+    if ($node instanceof NodeInterface) {
+      return ['nid' => $node->id(), 'errors' => 0];
+    }
+    return ['nid' => 0, 'errors' => 1];
+  }
+
+  /**
    * Exports an album to a package directory.
+   *
+   * Kept for programmatic use; the form now uses the batch API above.
    *
    * @param int $nid
    *   Album node ID.

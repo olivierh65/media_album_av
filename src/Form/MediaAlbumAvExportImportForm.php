@@ -127,8 +127,9 @@ class MediaAlbumAvExportImportForm extends FormBase {
    * Handles the export button.
    */
   public function exportSubmit(array &$form, FormStateInterface $form_state) {
-    $nid = (int) $form_state->getValue(['export', 'nid']);
-    $destination = trim((string) $form_state->getValue(['export', 'destination']));
+    // Note: entity_autocomplete is not #tree here, values arrive flat.
+    $nid = (int) $form_state->getValue('nid');
+    $destination = trim((string) $form_state->getValue('destination'));
     if ($nid <= 0 || $destination === '') {
       $this->messenger()->addError($this->t('Select an album and a destination directory.'));
       return;
@@ -157,8 +158,9 @@ class MediaAlbumAvExportImportForm extends FormBase {
    * Handles the import button.
    */
   public function importSubmit(array &$form, FormStateInterface $form_state) {
-    $source = trim((string) $form_state->getValue(['import', 'source']));
-    $archive_fids = $form_state->getValue(['import', 'archive']);
+    // Note: fields are not #tree here, values arrive flat.
+    $source = trim((string) $form_state->getValue('source'));
+    $archive_fids = $form_state->getValue('archive');
     $archive_fids = is_array($archive_fids) ? array_filter($archive_fids) : [];
 
     if (!empty($archive_fids)) {
@@ -180,7 +182,7 @@ class MediaAlbumAvExportImportForm extends FormBase {
       return;
     }
 
-    $stats = $this->exportImport->importAlbum($source, (string) $form_state->getValue(['import', 'target_scheme']));
+    $stats = $this->exportImport->importAlbum($source, (string) $form_state->getValue('target_scheme'));
     $this->messenger()->addStatus($this->t(
       'Import done. New album NID: @nid, medias: @medias, files: @files, terms created: @terms, errors: @errors.',
       [

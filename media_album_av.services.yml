@@ -1,4 +1,8 @@
 services:
+  logger.channel.media_album_av:
+    parent: logger.channel_base
+    arguments: ['media_album_av']
+
   media_album_av.album_config:
     class: Drupal\media_album_av\Service\AlbumConfigService
     arguments: ['@config.factory']
@@ -13,6 +17,14 @@ services:
   media_album_av.derivatives_maintenance:
     class: Drupal\media_album_av\Service\MediaAlbumAvDerivativesMaintenance
     arguments: ['@entity_type.manager']
+
+  media_album_av.storage_migration:
+    class: Drupal\media_album_av\Service\MediaAlbumAvStorageMigration
+    arguments: ['@entity_type.manager', '@file_system', '@stream_wrapper_manager', '@logger.channel.media_album_av']
+
+  media_album_av.export_import:
+    class: Drupal\media_album_av\Service\MediaAlbumAvExportImport
+    arguments: ['@entity_type.manager', '@file_system', '@logger.channel.media_album_av']
 
   media_album_av.checker:
     class: Drupal\media_album_av\Service\MediaAlbumAvChecker

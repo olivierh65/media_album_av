@@ -122,7 +122,10 @@ class MediaAlbumAvDerivativesMaintenance {
             $style->flush($uri);
           }
 
-          $derivative_uri = $style->buildUri($uri);
+          $derivative_uri = \Drupal::hasService('media_album_s3.thumbnail_storage')
+            ? \Drupal::service('media_album_s3.thumbnail_storage')->getDerivativeUri($style, $uri)
+            : $style->buildUri($uri);
+
           if ($style->createDerivative($uri, $derivative_uri)) {
             $stats['derivatives_generated']++;
           }

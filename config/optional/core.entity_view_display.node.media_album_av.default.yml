@@ -11,11 +11,12 @@ dependencies:
     - field.field.node.media_album_av.field_media_album_av_event_group
     - field.field.node.media_album_av.field_media_album_av_grouping
     - field.field.node.media_album_av.field_media_album_av_media
+    - image.style.medium
     - node.type.media_album_av
   module:
     - datetime
     - geocoder_field
-    - lightgallery
+    - media
     - text
     - user
 _core:
@@ -82,17 +83,15 @@ content:
     weight: 6
     region: content
   field_media_album_av_media:
-    type: media_lightgallery_thumbnail
+    type: media_thumbnail
     label: above
     settings:
-      inline: false
-      thumbnail_image_style: null
-      thumbnail_loading: lazy
-      gallery_image_style: null
-      custom_settings: {  }
-      caption_view_mode: null
+      image_link: media
+      image_style: medium
+      image_loading:
+        attribute: lazy
     third_party_settings: {  }
-    weight: 7
+    weight: 9
     region: content
 hidden:
   entity_print_view_epub: true
@@ -100,3 +99,4 @@ hidden:
   entity_print_view_word_docx: true
   langcode: true
   links: true
+

@@ -213,13 +213,33 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
 
     // Get available stream wrappers.
     $stream_wrappers = $this->getStreamWrappers();
+    $storage_options = [
+      'public' => $this->t('Public files (public://)'),
+      'private' => $this->t('Private files (private://)'),
+    ];
+    if (isset($stream_wrappers['albumav'])) {
+      $storage_options['albumav'] = $stream_wrappers['albumav'];
+    }
 
     $form['album']['prefered_storage_location'] = [
       '#type' => 'select',
-      '#title' => $this->t('Preferred Storage Location (Legacy)'),
-      '#description' => $this->t('Deprecated: Use "Preferred Stream Wrapper" instead. Select the storage location for media files.'),
-      '#options' => $stream_wrappers,
+      '#title' => $this->t('Preferred Storage Location'),
+      '#description' => $this->t('Select the storage location for media files. Albumav requires the Media Album S3 module and serves files through Drupal, never through a direct S3 URL.'),
+      '#options' => $storage_options,
       '#default_value' => $config->get('prefered_storage_location') ?? 'private',
+      '#required' => FALSE,
+    ];
+
+    $thumbnail_storage_options = [
+      'local' => $this->t('Local private files (private://albumav_thumbnails)'),
+      's3' => $this->t('S3 albumav (albumav://thumbnails)'),
+    ];
+    $form['album']['thumbnail_storage'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Thumbnail Storage'),
+      '#description' => $this->t('Select where generated thumbnails are stored. This setting is used when the Media Album S3 module is enabled.'),
+      '#options' => $thumbnail_storage_options,
+      '#default_value' => $this->getThumbnailStorage(),
       '#required' => FALSE,
     ];
 
@@ -230,6 +250,18 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#options' => ['' => '- ' . $this->t('None') . ' -'] + $vocabularies,
       '#default_value' => $config->get('prefered_media_directory') ??
       (array_key_exists('media_album_av_folders', $vocabularies) ? 'media_album_av_folders' : NULL) ?? 'private',
+      '#required' => FALSE,
+    ];
+
+    $form['album']['browser_initial_directory'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Media Browser Initial Directory'),
+      '#description' => $this->t('Select which directory the "Select media" browser opens on. "Album directory" uses the directory field of the edited album when available. "Root" keeps the current behavior and can be slow because it lists every media.'),
+      '#options' => [
+        'album' => $this->t('Album directory (recommended)'),
+        'root' => $this->t('Root (all media)'),
+      ],
+      '#default_value' => $config->get('browser_initial_directory') ?? 'album',
       '#required' => FALSE,
     ];
     // ==========================================
@@ -495,6 +527,9 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('prefered_media_type_video', $values['album']['prefered_media_type_video']);
     $config->set('prefered_storage_location', $values['album']['prefered_storage_location']);
     $config->set('prefered_media_directory', $values['album']['prefered_media_directory']);
+    $config->set('browser_initial_directory', $values['album']['browser_initial_directory'] ?? 'album');
+    $this->setThumbnailStorage($values['album']['thumbnail_storage'] ?? 'local');
+    $this->applyStorageLocation($values['album']['prefered_storage_location'] ?? 'private');
 
     // Extract the author_fields from the nested structure.
     $author_fields = $values['media_authors'] ?? [];
@@ -626,6 +661,66 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     }
 
     return $options;
+  }
+
+  /**
+   * Gets the configured thumbnail storage mode.
+   *
+   * @return string
+   *   "local" or "s3".
+   */
+  private function getThumbnailStorage(): string {
+    if (\Drupal::hasService('media_album_s3.thumbnail_storage')) {
+      return \Drupal::service('media_album_s3.thumbnail_storage')->getMode();
+    }
+
+    return \Drupal::config('media_album_s3.settings')->get('thumbnail_storage') ?? 'local';
+  }
+
+  /**
+   * Saves the thumbnail storage mode when Media Album S3 is available.
+   *
+   * @param string $mode
+   *   "local" or "s3".
+   */
+  private function setThumbnailStorage(string $mode): void {
+    if (!in_array($mode, ['local', 's3'], TRUE)) {
+      $mode = 'local';
+    }
+
+    if (\Drupal::moduleHandler()->moduleExists('media_album_s3')) {
+      \Drupal::configFactory()->getEditable('media_album_s3.settings')
+        ->set('thumbnail_storage', $mode)
+        ->save();
+    }
+  }
+
+  /**
+   * Applies the selected storage scheme to album media file fields.
+   *
+   * This is what makes the setting effective for new uploads: media_directories
+   * builds its upload location from the field storage "uri_scheme".
+   *
+   * @param string $scheme
+   *   "public", "private" or "albumav".
+   */
+  private function applyStorageLocation(string $scheme): void {
+    if (!in_array($scheme, ['public', 'private', 'albumav'], TRUE)) {
+      $scheme = 'private';
+    }
+
+    if ($scheme === 'albumav' && !\Drupal::moduleHandler()->moduleExists('media_album_s3')) {
+      $scheme = 'private';
+    }
+
+    $field_storage = \Drupal::entityTypeManager()->getStorage('field_storage_config');
+    foreach (['field_media_album_av_photo', 'field_media_album_av_video'] as $field_name) {
+      $storage = $field_storage->load('media.' . $field_name);
+      if ($storage && $storage->getSetting('uri_scheme') !== $scheme) {
+        $storage->setSetting('uri_scheme', $scheme);
+        $storage->save();
+      }
+    }
   }
 
   /**

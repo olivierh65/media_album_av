@@ -12,10 +12,47 @@ use Drupal\views\ViewExecutable;
 use Drupal\views\Plugin\views\query\QueryPluginBase;
 
 /**
- * Implements hook_form_alter().
+ * Implements hook_form_entity_browser_media_directories_modal_form_alter().
+ *
+ * Opens the "Select media" browser on the album directory instead of the
+ * root when configured. The root view lists every media and is very slow.
  */
-function media_album_av_form_alter(&$form, FormStateInterface $form_state, $form_id) {
-  // Customizations here if needed
+function media_album_av_form_entity_browser_media_directories_modal_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  if (\Drupal::config('media_album_av.settings')->get('browser_initial_directory') === 'root') {
+    return;
+  }
+
+  $directory_id = media_album_av_get_browser_initial_directory();
+  if ($directory_id === NULL) {
+    return;
+  }
+
+  if (isset($form['widget']['browser']['active_directory'])) {
+    $form['widget']['browser']['active_directory']['#default_value'] = $directory_id;
+    $form['widget']['browser']['active_directory']['#value'] = $directory_id;
+  }
+}
+
+/**
+ * Resolves the initial media browser directory for the edited album.
+ *
+ * @return int|null
+ *   The taxonomy term ID, or NULL to keep the default behavior.
+ */
+function media_album_av_get_browser_initial_directory(): ?int {
+  $route_match = \Drupal::routeMatch();
+  $node = $route_match->getParameter('node');
+  if ($node instanceof NodeInterface) {
+    $directory_field = 'field_media_album_av_directory';
+    if ($node->hasField($directory_field) && !$node->get($directory_field)->isEmpty()) {
+      $tid = (int) $node->get($directory_field)->target_id;
+      if ($tid > 0) {
+        return $tid;
+      }
+    }
+  }
+
+  return NULL;
 }
 
 /**
@@ -57,6 +94,50 @@ function media_album_av_views_data() {
 
 function media_album_av_entity_presave(EntityInterface $entity) {
   if ($entity instanceof NodeInterface && $entity->bundle() === 'media_album_av') {
+    media_album_av_assign_album_directory($entity);
+    media_album_av_sync_authors($entity);
+  }
+}
+
+/**
+ * Assigns the album directory to newly added media without directory.
+ *
+ * media_directories attaches new uploads to the active browser directory.
+ * When the browser was opened on the album directory, nothing more is needed.
+ * This is a safety net for media created while the browser was on root.
+ */
+function media_album_av_assign_album_directory(NodeInterface $node): void {
+  if (!$node->hasField('field_media_album_av_directory') || $node->get('field_media_album_av_directory')->isEmpty()) {
+    return;
+  }
+  if (!$node->hasField('field_media_album_av_media') || $node->get('field_media_album_av_media')->isEmpty()) {
+    return;
+  }
+
+  $tid = (int) $node->get('field_media_album_av_directory')->target_id;
+  if ($tid <= 0) {
+    return;
+  }
+
+  foreach ($node->get('field_media_album_av_media')->referencedEntities() as $media) {
+    if (!$media instanceof \Drupal\media\MediaInterface) {
+      continue;
+    }
+    if (!$media->hasField('directory')) {
+      continue;
+    }
+    if (!$media->get('directory')->isEmpty()) {
+      continue;
+    }
+    $media->set('directory', $tid);
+    $media->save();
+  }
+}
+
+/**
+ * Syncs media authors to the album node.
+ */
+function media_album_av_sync_authors(NodeInterface $entity): void {
     $authors = [];
     $field_manager = \Drupal::service('entity_field.manager');
     $config = \Drupal::config('media_album_av.settings');
@@ -160,7 +241,6 @@ function media_album_av_entity_presave(EntityInterface $entity) {
       // Stocker dans le champ configuré du nœud
       $entity->set($node_authors_field, $authors_list);
     }
-  }
 }
 
 function media_album_av_views_pre_view(ViewExecutable $view, $display_id, array &$args) {

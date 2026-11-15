@@ -1,5 +1,13 @@
-media_album_av.settings:
+media_album_av.dashboard:
   path: '/admin/config/media/media-album-av'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\MediaAlbumAvDashboardController::overview'
+    _title: 'Media Album AV'
+  requirements:
+    _permission: 'media_album_av.administer_settings'
+
+media_album_av.settings:
+  path: '/admin/config/media/media-album-av/settings'
   defaults:
     _form: '\Drupal\media_album_av\Form\MediaAlbumAvSettingsForm'
     _title: 'Media Album AV Settings'
@@ -55,3 +63,17 @@ media_album_av.check_albums:
     _title: 'Media Album AV – Check References'
   requirements:
     _permission: 'media_album_av.administer_settings'
+media_album_av.migrate_storage:
+  path: '/admin/content/media-album-av/migrate'
+  defaults:
+    _form: '\Drupal\media_album_av\Form\MediaAlbumAvMigrateForm'
+    _title: 'Media Album AV – Migrate Storage'
+  requirements:
+    _permission: 'media_album_av.migrate_storage'
+media_album_av.export_import:
+  path: '/admin/content/media-album-av/export-import'
+  defaults:
+    _form: '\Drupal\media_album_av\Form\MediaAlbumAvExportImportForm'
+    _title: 'Media Album AV – Export / Import'
+  requirements:
+    _permission: 'media_album_av.export_import'

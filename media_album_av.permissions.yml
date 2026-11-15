@@ -12,3 +12,13 @@ media_album_av.repair_references:
   title: 'Repair Media Album AV references'
   description: 'Verify and repair broken media references in Media Album AV nodes'
   restrict access: true
+
+media_album_av.migrate_storage:
+  title: 'Migrate Media Album AV storage'
+  description: 'Migrate album media files to another storage scheme'
+  restrict access: true
+
+media_album_av.export_import:
+  title: 'Export / Import Media Album AV'
+  description: 'Export or import album packages'
+  restrict access: true

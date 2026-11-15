@@ -2,8 +2,15 @@ media_album_av.main:
   title: 'Media Album AV'
   description: 'Media Album AV configuration and management'
   parent: system.admin_config_media
-  route_name: media_album_av.settings
+  route_name: media_album_av.dashboard
   weight: 9
+
+media_album_av.dashboard:
+  title: 'Dashboard'
+  description: 'Media Album AV tools overview'
+  parent: media_album_av.main
+  route_name: media_album_av.dashboard
+  weight: -1
 
 media_album_av.settings:
   title: 'Settings'
@@ -31,3 +38,15 @@ media_album_av.check_albums:
   route_name: media_album_av.check_albums
   parent: media_album_av.main
   weight: 2
+media_album_av.migrate_storage:
+  title: 'Migrate Storage'
+  description: 'Migrate album media files to another storage scheme'
+  route_name: media_album_av.migrate_storage
+  parent: media_album_av.main
+  weight: 3
+media_album_av.export_import:
+  title: 'Export / Import'
+  description: 'Export or import an album package'
+  route_name: media_album_av.export_import
+  parent: media_album_av.main
+  weight: 4

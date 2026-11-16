@@ -264,6 +264,31 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
       '#default_value' => $config->get('browser_initial_directory') ?? 'album',
       '#required' => FALSE,
     ];
+
+    // ==========================================
+    // 1c. EXPORT RETENTION (cron purge)
+    // ==========================================
+    $form['export_retention'] = [
+      '#type' => 'details',
+      '#title' => $this->t('Export Retention'),
+      '#group' => 'tabs',
+      '#open' => FALSE,
+    ];
+
+    $form['export_retention']['description'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . $this->t('Exports are stored under private://album-export. A new export of an album deletes the previous export of the same album. Older exports are deleted by cron after the retention period. Only files tracked in the export history are ever deleted.') . '</p>',
+    ];
+
+    $form['export_retention']['export_retention_hours'] = [
+      '#type' => 'number',
+      '#title' => $this->t('Keep exports for (hours)'),
+      '#description' => $this->t('Exports older than this are deleted by cron (0 = delete on next cron run). Default: 24.'),
+      '#default_value' => $config->get('export_retention_hours') ?? 24,
+      '#min' => 0,
+      '#max' => 8760,
+      '#required' => TRUE,
+    ];
     // ==========================================
     // 2. CONFIGURATION PAR TYPE DE MÉDIA
     // ==========================================
@@ -528,6 +553,7 @@ class MediaAlbumAvSettingsForm extends ConfigFormBase {
     $config->set('prefered_storage_location', $values['album']['prefered_storage_location']);
     $config->set('prefered_media_directory', $values['album']['prefered_media_directory']);
     $config->set('browser_initial_directory', $values['album']['browser_initial_directory'] ?? 'album');
+    $config->set('export_retention_hours', max(0, (int) ($values['export_retention']['export_retention_hours'] ?? 24)));
     $this->setThumbnailStorage($values['album']['thumbnail_storage'] ?? 'local');
     $this->applyStorageLocation($values['album']['prefered_storage_location'] ?? 'private');
 

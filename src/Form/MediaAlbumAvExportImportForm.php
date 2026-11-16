@@ -284,6 +284,7 @@ class MediaAlbumAvExportImportForm extends FormBase {
     $context['results']['multipart'] = $final['multipart'];
     $context['results']['auto_download'] = $auto_download;
     $context['results']['destination'] = $manifest['destination'];
+    $context['results']['nid'] = $manifest['nid'] ?? 0;
   }
 
   /**
@@ -295,6 +296,14 @@ class MediaAlbumAvExportImportForm extends FormBase {
       $archives = $results['archives'] ?? [];
       $multipart = !empty($results['multipart']);
       $auto_download = !empty($results['auto_download']);
+      $destination = $results['destination'] ?? '';
+
+      // Le nouvel export a réussi : supprimer le précédent export du même
+      // album (devenu inutile). Seuls les fichiers suivis sont supprimés.
+      $nid = (int) ($results['nid'] ?? 0);
+      if ($nid > 0 && $destination !== '') {
+        \Drupal::service('media_album_av.export_import')->purgePreviousAlbumExports($nid, $destination);
+      }
 
       // Persister les liens en tempstore : le batch redirige vers une requête
       // neuve, donc $results ne survit pas jusqu'au buildForm suivant.

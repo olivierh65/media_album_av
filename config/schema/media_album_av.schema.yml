@@ -1,0 +1,43 @@
+media_album_av.settings:
+  type: config_object
+  label: 'Media Album AV settings'
+  mapping:
+    node_authors_field:
+      type: string
+      label: 'Node authors field'
+    album_content_type:
+      type: string
+      label: 'Album content type'
+    event_vocabulary:
+      type: string
+      label: 'Event vocabulary'
+    caption_field:
+      type: string
+      label: 'Caption field'
+    date_field:
+      type: string
+      label: 'Date field'
+    event_field:
+      type: string
+      label: 'Event field'
+    prefered_media_type_photo:
+      type: string
+      label: 'Preferred media type for photos'
+    prefered_media_type_video:
+      type: string
+      label: 'Preferred media type for videos'
+    prefered_storage_location:
+      type: string
+      label: 'Preferred storage location'
+    prefered_media_directory:
+      type: string
+      label: 'Preferred media directory'
+    browser_initial_directory:
+      type: string
+      label: 'Media browser initial directory'
+    grouping_config_field:
+      type: string
+      label: 'Grouping configuration field'
+    export_retention_hours:
+      type: integer
+      label: 'Export retention (hours)'

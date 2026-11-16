@@ -19,6 +19,7 @@ prefered_media_type_video: media_album_av_video
 prefered_storage_location: private
 prefered_media_directory: media_album_av_folders
 grouping_config_field: field_media_album_av_grouping
+export_retention_hours: 24
 category_fields:
   media_album_av_photo:
     field_name: field_media_album_av_category

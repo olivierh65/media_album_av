@@ -136,3 +136,15 @@ function media_album_av_update_10301() {
 
   return t('Legacy caption field removed from media_album_av content type.');
 }
+
+/**
+ * Add default export retention (24h) for the cron purge of album exports.
+ */
+function media_album_av_update_10302() {
+  $config = \Drupal::configFactory()->getEditable('media_album_av.settings');
+  if ($config->get('export_retention_hours') === NULL) {
+    $config->set('export_retention_hours', 24)->save();
+  }
+
+  return t('Default export retention set to 24 hours.');
+}

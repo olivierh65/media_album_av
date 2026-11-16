@@ -56,6 +56,31 @@ function media_album_av_get_browser_initial_directory(): ?int {
 }
 
 /**
+ * Implements hook_cron().
+ *
+ * Purges expired album exports (package directories + archives tracked in
+ * the export history, plus orphan package directories). Retention is
+ * configurable (media_album_av.settings:export_retention_hours, default 24).
+ */
+function media_album_av_cron() {
+  $hours = (int) \Drupal::config('media_album_av.settings')->get('export_retention_hours');
+  // Valeur par défaut si la config n'a jamais été sauvegardée.
+  if ($hours < 0) {
+    $hours = 24;
+  }
+  /** @var \Drupal\media_album_av\Service\MediaAlbumAvExportImport $service */
+  $service = \Drupal::service('media_album_av.export_import');
+  $result = $service->purgeExpiredExports($hours * 3600);
+  if ($result['entries'] > 0 || $result['orphans'] > 0) {
+    \Drupal::logger('media_album_av')->info('Cron purged @entries expired export(s) and @orphans orphan directorie(s) (retention: @hours h).', [
+      '@entries' => $result['entries'],
+      '@orphans' => $result['orphans'],
+      '@hours' => $hours,
+    ]);
+  }
+}
+
+/**
  * Implements hook_theme().
  */
 function media_album_av_theme() {

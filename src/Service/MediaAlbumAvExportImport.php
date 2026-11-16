@@ -4,6 +4,7 @@ namespace Drupal\media_album_av\Service;
 
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\File\FileSystemInterface;
+use Drupal\Core\State\StateInterface;
 use Drupal\file\FileInterface;
 use Drupal\media\MediaInterface;
 use Drupal\node\NodeInterface;
@@ -46,12 +47,63 @@ class MediaAlbumAvExportImport {
   protected $logger;
 
   /**
+   * Ensures a directory URI exists and is writable.
+   *
+   * Uses the real path (mkdir natif) as primary method because the
+   * file_system service may be decorated (s3fs) with a prepareDirectory()
+   * that does not create local directories. Falls back to prepareDirectory().
+   *
+   * @param string $directory_uri
+   *   Directory URI (ex: private://album-export/foo).
+   *
+   * @return bool
+   *   TRUE if the directory exists and is writable.
+   */
+  protected function ensureDirectory(string $directory_uri): bool {
+    $real = $this->fileSystem->realpath($directory_uri);
+    if ($real) {
+      if (is_dir($real)) {
+        return is_writable($real);
+      }
+      // Le parent existe (résolu), créer le dernier niveau en natif.
+      if (@mkdir($real, 0775, TRUE) && is_dir($real)) {
+        return TRUE;
+      }
+    }
+    // Fallback : API Drupal (utile si le scheme n'a pas de realpath).
+    $copy = $directory_uri;
+    if ($this->fileSystem->prepareDirectory($copy, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS)) {
+      $real = $this->fileSystem->realpath($directory_uri);
+      return $real && is_dir($real) && is_writable($real);
+    }
+    return FALSE;
+  }
+
+  /**
+   * The state service (export history).
+   *
+   * @var \Drupal\Core\State\StateInterface
+   */
+  protected $state;
+
+  /**
+   * State key holding the export history.
+   */
+  const EXPORT_HISTORY_KEY = 'media_album_av.export_history';
+
+  /**
+   * Base directory for all exports (downloadable via controller).
+   */
+  const EXPORT_BASE_URI = 'private://album-export';
+
+  /**
    * Constructs a MediaAlbumAvExportImport object.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, LoggerInterface $logger) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, FileSystemInterface $file_system, LoggerInterface $logger, ?StateInterface $state = NULL) {
     $this->entityTypeManager = $entity_type_manager;
     $this->fileSystem = $file_system;
     $this->logger = $logger;
+    $this->state = $state ?? \Drupal::state();
   }
 
   /**
@@ -72,10 +124,10 @@ class MediaAlbumAvExportImport {
     }
 
     $files_dir = $destination . '/files';
-    $destination_copy = $destination;
-    $files_dir_copy = $files_dir;
-    $this->fileSystem->prepareDirectory($destination_copy, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-    $this->fileSystem->prepareDirectory($files_dir_copy, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    if (!$this->ensureDirectory($destination) || !$this->ensureDirectory($files_dir)) {
+      $this->logger->error('Could not create export directory @dir.', ['@dir' => $destination]);
+      return NULL;
+    }
 
     $term_paths = [];
     foreach ($this->collectTermIds($node) as $tid) {
@@ -103,6 +155,7 @@ class MediaAlbumAvExportImport {
 
     return [
       'version' => 1,
+      'nid' => $nid,
       'album' => $this->exportNodeFields($node),
       'terms' => array_values($term_paths),
       'term_paths' => $term_paths,
@@ -164,6 +217,7 @@ class MediaAlbumAvExportImport {
    */
   public function finalizeExport(array $manifest, int $part_size = 0): array {
     $destination = $manifest['destination'];
+    $nid = $manifest['nid'] ?? 0;
     unset($manifest['term_paths'], $manifest['mids'], $manifest['destination']);
     file_put_contents($destination . '/manifest.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
     $archive = $this->createArchive($destination);
@@ -176,6 +230,10 @@ class MediaAlbumAvExportImport {
         $multipart = TRUE;
       }
     }
+    // Enregistrer dans l'historique (pour purge cron + remplacement par album).
+    if (!empty($archives)) {
+      $this->recordExport((int) $nid, $destination, $archives);
+    }
     return [
       'terms' => count($manifest['terms'] ?? []),
       'archive' => $archives[0] ?? NULL,
@@ -183,6 +241,222 @@ class MediaAlbumAvExportImport {
       'multipart' => $multipart,
       'part_size' => $part_size,
     ];
+  }
+
+  /**
+   * Records an export in the history (state).
+   *
+   * @param int $nid
+   *   Exported album node ID.
+   * @param string $destination
+   *   Package directory URI.
+   * @param string[] $archives
+   *   Archive URIs produced for this export.
+   */
+  public function recordExport(int $nid, string $destination, array $archives): void {
+    $history = $this->state->get(self::EXPORT_HISTORY_KEY, []);
+    $history[] = [
+      'nid' => $nid,
+      'destination' => $destination,
+      'archives' => array_values($archives),
+      'created' => \Drupal::time()->getRequestTime(),
+    ];
+    $this->state->set(self::EXPORT_HISTORY_KEY, $history);
+  }
+
+  /**
+   * Returns the export history.
+   *
+   * @return array[]
+   *   List of ['nid', 'destination', 'archives', 'created'].
+   */
+  public function getExportHistory(): array {
+    return $this->state->get(self::EXPORT_HISTORY_KEY, []);
+  }
+
+  /**
+   * Deletes a previous export of the same album (same nid).
+   *
+   * Called when a new export of an album succeeds: the old package becomes
+   * useless. Only files tracked in the history are deleted — never anything
+   * else.
+   *
+   * @param int $nid
+   *   Album node ID.
+   * @param string $except_destination
+   *   Destination URI to keep (the fresh export).
+   *
+   * @return int
+   *   Number of history entries removed.
+   */
+  public function purgePreviousAlbumExports(int $nid, string $except_destination): int {
+    $removed = 0;
+    $history = $this->state->get(self::EXPORT_HISTORY_KEY, []);
+    $kept = [];
+    foreach ($history as $entry) {
+      if (($entry['nid'] ?? 0) === $nid && ($entry['destination'] ?? '') !== $except_destination) {
+        $this->deleteExportPackage($entry);
+        $removed++;
+      }
+      else {
+        $kept[] = $entry;
+      }
+    }
+    if ($removed > 0) {
+      $this->state->set(self::EXPORT_HISTORY_KEY, $kept);
+      $this->logger->info('Purged @count previous export(s) of album @nid.', [
+        '@count' => $removed,
+        '@nid' => $nid,
+      ]);
+    }
+    return $removed;
+  }
+
+  /**
+   * Deletes all files of one export package tracked in the history.
+   *
+   * Deletes ONLY:
+   * - the package directory (destination + files/ + manifest.json),
+   * - the archive URIs listed in the entry (single .zip or .zip.partN).
+   * Nothing else on disk is ever touched.
+   *
+   * @param array $entry
+   *   History entry ['destination', 'archives', ...].
+   */
+  public function deleteExportPackage(array $entry): void {
+    $destination = $entry['destination'] ?? '';
+    $archives = $entry['archives'] ?? [];
+
+    // 1. Archives listées (garde-fou : sous EXPORT_BASE_URI + extension .zip*).
+    foreach ($archives as $archive_uri) {
+      if (!$this->isManagedExportUri($archive_uri)) {
+        $this->logger->warning('Skipping deletion of untracked URI @uri (not under export base).', ['@uri' => $archive_uri]);
+        continue;
+      }
+      $real = $this->fileSystem->realpath($archive_uri);
+      if ($real && is_file($real)) {
+        @unlink($real);
+      }
+    }
+
+    // 2. Dossier du paquet (garde-fou : sous EXPORT_BASE_URI, pas la base).
+    if ($this->isManagedExportUri($destination, TRUE)) {
+      $real_dir = $this->fileSystem->realpath($destination);
+      if ($real_dir && is_dir($real_dir)) {
+        $this->fileSystem->deleteRecursive($real_dir);
+      }
+    }
+  }
+
+  /**
+   * Checks that a URI is managed by the export system (safe to delete).
+   *
+   * @param string $uri
+   *   URI to check.
+   * @param bool $is_dir
+   *   TRUE when checking a package directory instead of an archive file.
+   *
+   * @return bool
+   *   TRUE only if the URI is strictly under private://album-export (and, for
+   *   files, ends with .zip or .zip.partN).
+   */
+  protected function isManagedExportUri(string $uri, bool $is_dir = FALSE): bool {
+    $base = rtrim(self::EXPORT_BASE_URI, '/') . '/';
+    if (strpos($uri, $base) !== 0) {
+      return FALSE;
+    }
+    $relative = substr($uri, strlen($base));
+    // Refuser vide, racine, traversée, sous-schemes.
+    if ($relative === '' || strpos($relative, '..') !== FALSE || strpos($relative, ':') !== FALSE) {
+      return FALSE;
+    }
+    if (!$is_dir && !preg_match('/\.zip(\.part\d+)?$/', $relative)) {
+      return FALSE;
+    }
+    return TRUE;
+  }
+
+  /**
+   * Purges expired exports (cron).
+   *
+   * Deletes history entries older than $max_age seconds, including all their
+   * tracked files. Also cleans orphan package directories (with a manifest.json
+   * created by this module) that have no history entry and are older than
+   * $max_age.
+   *
+   * @param int $max_age
+   *   Maximum age in seconds (0 = purge everything tracked).
+   *
+   * @return array
+   *   ['entries' => int, 'orphans' => int] removed counts.
+   */
+  public function purgeExpiredExports(int $max_age): array {
+    $now = \Drupal::time()->getRequestTime();
+    $removed_entries = 0;
+    $removed_orphans = 0;
+
+    $history = $this->state->get(self::EXPORT_HISTORY_KEY, []);
+    $kept = [];
+    $known_destinations = [];
+    foreach ($history as $entry) {
+      $created = $entry['created'] ?? $now;
+      $known_destinations[$entry['destination'] ?? ''] = TRUE;
+      if ($max_age >= 0 && ($now - $created) >= $max_age) {
+        $this->deleteExportPackage($entry);
+        $removed_entries++;
+      }
+      else {
+        $kept[] = $entry;
+      }
+    }
+    if ($removed_entries > 0) {
+      $this->state->set(self::EXPORT_HISTORY_KEY, $kept);
+    }
+
+    // Orphelins : dossiers sous la base avec manifest.json du module, sans
+    // entrée d'historique, plus vieux que $max_age. Vérification stricte :
+    // le manifest doit contenir version + nid + album (signature du module).
+    $base_real = $this->fileSystem->realpath(self::EXPORT_BASE_URI);
+    if ($base_real && is_dir($base_real)) {
+      foreach (scandir($base_real) as $name) {
+        if ($name === '.' || $name === '..') {
+          continue;
+        }
+        $candidate = self::EXPORT_BASE_URI . '/' . $name;
+        if (isset($known_destinations[$candidate])) {
+          continue;
+        }
+        $real_candidate = $base_real . '/' . $name;
+        if (!is_dir($real_candidate)) {
+          continue;
+        }
+        $manifest_path = $real_candidate . '/manifest.json';
+        if (!is_file($manifest_path)) {
+          continue;
+        }
+        $manifest = json_decode(@file_get_contents($manifest_path), TRUE);
+        if (!is_array($manifest) || !isset($manifest['version'], $manifest['nid'], $manifest['album'])) {
+          continue;
+        }
+        if ($max_age >= 0 && ($now - (int) @filemtime($manifest_path)) < $max_age) {
+          continue;
+        }
+        // Supprimer le dossier orphelin + archives soeurs éventuelles.
+        $this->fileSystem->deleteRecursive($real_candidate);
+        foreach (glob($real_candidate . '.zip*') ?: [] as $sibling) {
+          if (is_file($sibling)) {
+            @unlink($sibling);
+          }
+        }
+        $removed_orphans++;
+        $this->logger->info('Purged orphan export directory @dir.', ['@dir' => $candidate]);
+      }
+    }
+
+    if ($removed_entries > 0) {
+      $this->logger->info('Purged @count expired export(s).', ['@count' => $removed_entries]);
+    }
+    return ['entries' => $removed_entries, 'orphans' => $removed_orphans];
   }
 
   /**
@@ -316,8 +590,11 @@ class MediaAlbumAvExportImport {
     }
 
     $files_dir = $destination . '/files';
-    $this->fileSystem->prepareDirectory($destination, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-    $this->fileSystem->prepareDirectory($files_dir, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
+    if (!$this->ensureDirectory($destination) || !$this->ensureDirectory($files_dir)) {
+      $this->logger->error('Could not create export directory @dir.', ['@dir' => $destination]);
+      $stats['errors']++;
+      return $stats;
+    }
 
     $manifest = [
       'version' => 1,
@@ -606,12 +883,10 @@ class MediaAlbumAvExportImport {
       return FALSE;
     }
 
-    $real_destination = $this->fileSystem->realpath($destination);
-    if (!$real_destination || !is_dir($real_destination)) {
-      $destination_copy = $destination;
-      $this->fileSystem->prepareDirectory($destination_copy, FileSystemInterface::CREATE_DIRECTORY | FileSystemInterface::MODIFY_PERMISSIONS);
-      $real_destination = $this->fileSystem->realpath($destination);
+    if (!$this->ensureDirectory($destination)) {
+      return FALSE;
     }
+    $real_destination = $this->fileSystem->realpath($destination);
     if (!$real_destination || !is_dir($real_destination)) {
       return FALSE;
     }

@@ -295,12 +295,15 @@ class MediaAlbumAvExportImportForm extends FormBase {
           continue;
         }
         $real = \Drupal::service('file_system')->realpath($archive_uri);
-        $size = ($real && is_file($real)) ? \Drupal::service('file_system')->getFileSize($real) : 0;
+        // PHP natif uniquement : le service file_system est décoré par s3fs
+        // en prod (S3fsFileSystemD103) et n'offre ni getFileSize() ni
+        // formatSize(). filesize()/format_size() n'ont aucune dépendance.
+        $size = ($real && is_file($real)) ? (int) @filesize($real) : 0;
         $downloads[] = [
           'relative' => $relative,
           'label' => basename($archive_uri),
           'basename' => preg_replace('/\.part\d+$/', '', basename($archive_uri)),
-          'size' => \Drupal::service('file_system')->formatSize($size),
+          'size' => format_size($size),
           'multipart' => $multipart,
           'auto' => $auto_download,
         ];

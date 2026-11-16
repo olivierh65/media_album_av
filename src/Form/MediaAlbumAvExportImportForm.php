@@ -111,21 +111,31 @@ class MediaAlbumAvExportImportForm extends FormBase {
         '#attributes' => ['id' => 'media-album-av-export-downloads'],
       ];
       $items = [];
+      $auto_urls = [];
       foreach ($downloads as $i => $download) {
-        $url = Url::fromRoute('media_album_av.export_download', [], ['query' => ['file' => $download['relative']]]);
+        $url = $this->buildDownloadUrl($download['relative']);
+        if ($url === NULL) {
+          // Route inconnue du routeur (cache non reconstruit après déploiement).
+          $items[] = [
+            '#markup' => $this->t('@label (@size) — download route unavailable, rebuild caches.', [
+              '@label' => $download['label'],
+              '@size' => $download['size'],
+            ]),
+          ];
+          continue;
+        }
         $link = Link::fromTextAndUrl($download['label'] . ' (' . $download['size'] . ')', $url)->toString();
         $items[] = [
           '#markup' => $link,
           '#allowed_tags' => ['a'],
         ];
-        // Premier lien = cible du téléchargement automatique.
-        if ($i === 0 && !empty($download['auto'])) {
-          $form['#attached']['drupalSettings']['mediaAlbumAvExportAutoDownload'] = [
-            'urls' => array_map(function ($d) {
-              return Url::fromRoute('media_album_av.export_download', [], ['query' => ['file' => $d['relative']]])->toString();
-            }, $downloads),
-          ];
-        }
+        $auto_urls[] = $url->toString();
+      }
+      // Téléchargement automatique : uniquement si les URLs ont pu être générées.
+      if (!empty($auto_urls) && !empty($downloads[0]['auto'])) {
+        $form['#attached']['drupalSettings']['mediaAlbumAvExportAutoDownload'] = [
+          'urls' => $auto_urls,
+        ];
       }
       $form['download']['links'] = [
         '#theme' => 'item_list',
@@ -374,6 +384,29 @@ class MediaAlbumAvExportImportForm extends FormBase {
       }
     }
     return $valid;
+  }
+
+  /**
+   * Builds the download URL for an export file, or NULL if unavailable.
+   *
+   * Never throws: Url::fromRoute() raises RouteNotFoundException when the
+   * route cache does not know media_album_av.export_download yet (code
+   * deployed but caches not rebuilt). A 500 here would break the whole form.
+   */
+  protected function buildDownloadUrl(string $relative): ?Url {
+    try {
+      $url = Url::fromRoute('media_album_av.export_download', [], ['query' => ['file' => $relative]]);
+      // Force la génération pour détecter une route manquante tout de suite.
+      $url->toString();
+      return $url;
+    }
+    catch (\Exception $e) {
+      \Drupal::logger('media_album_av')->warning('Export download route unavailable for @file: @error', [
+        '@file' => $relative,
+        '@error' => $e->getMessage(),
+      ]);
+      return NULL;
+    }
   }
 
   /**

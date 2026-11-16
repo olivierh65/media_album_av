@@ -80,3 +80,11 @@ media-light-table:
     - core/jquery
     - core/drupal
     - core/drupalSettings
+
+export-auto-download:
+  version: 1.0
+  js:
+    js/export-auto-download.js: {}
+  dependencies:
+    - core/drupal
+    - core/drupalSettings

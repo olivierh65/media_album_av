@@ -4,6 +4,8 @@ namespace Drupal\media_album_av\Form;
 
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Link;
+use Drupal\Core\Url;
 use Drupal\media_album_av\Service\MediaAlbumAvExportImport;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -46,6 +48,8 @@ class MediaAlbumAvExportImportForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
+    $form['#attached']['library'][] = 'media_album_av/export-auto-download';
+
     $form['export'] = [
       '#type' => 'details',
       '#title' => $this->t('Export an album'),
@@ -63,8 +67,31 @@ class MediaAlbumAvExportImportForm extends FormBase {
     $form['export']['destination'] = [
       '#type' => 'textfield',
       '#title' => $this->t('Destination directory URI'),
-      '#default_value' => 'temporary://album-export',
-      '#description' => $this->t('Example: temporary://album-export-157. The manifest and files are written there, plus a .zip archive for download.'),
+      // private:// est servi par Drupal (streaming + contrôle d'accès) ;
+      // temporary:// (/tmp) n'est PAS accessible via HTTP, donc pas de
+      // téléchargement direct possible.
+      '#default_value' => 'private://album-export/album-export-' . date('Ymd-His'),
+      '#description' => $this->t('Example: private://album-export/album-157. The manifest and files are written there, plus .zip archive(s) streamed via a download controller (works for multi-GB files).'),
+    ];
+
+    $form['export']['part_size'] = [
+      '#type' => 'select',
+      '#title' => $this->t('Split archive into parts of'),
+      '#options' => [
+        '0' => $this->t('Single .zip (no split)'),
+        '524288000' => $this->t('500 MB parts'),
+        '1073741824' => $this->t('1 GB parts'),
+        '2147483648' => $this->t('2 GB parts'),
+      ],
+      '#default_value' => '1073741824',
+      '#description' => $this->t('Large archives (several GB) should be split: each part is downloaded separately with resume support (HTTP Range), avoiding PHP memory/timeout limits and browser failures on huge files.'),
+    ];
+
+    $form['export']['auto_download'] = [
+      '#type' => 'checkbox',
+      '#title' => $this->t('Start download automatically when the archive is ready'),
+      '#default_value' => TRUE,
+      '#description' => $this->t('If checked, the browser starts downloading the archive(s) as soon as the export batch finishes. With split archives, downloads start one after another.'),
     ];
 
     $form['export']['submit'] = [
@@ -72,6 +99,54 @@ class MediaAlbumAvExportImportForm extends FormBase {
       '#value' => $this->t('Export album'),
       '#submit' => ['::exportSubmit'],
     ];
+
+    // Section "téléchargement" : affichée après un export (liens persistés en
+    // tempstore car le batch reconstruit le formulaire sur une requête neuve).
+    $downloads = $this->getPendingDownloads();
+    if (!empty($downloads)) {
+      $form['download'] = [
+        '#type' => 'details',
+        '#title' => $this->t('Download ready archives (@count)', ['@count' => count($downloads)]),
+        '#open' => TRUE,
+        '#attributes' => ['id' => 'media-album-av-export-downloads'],
+      ];
+      $items = [];
+      foreach ($downloads as $i => $download) {
+        $url = Url::fromRoute('media_album_av.export_download', [], ['query' => ['file' => $download['relative']]]);
+        $link = Link::fromTextAndUrl($download['label'] . ' (' . $download['size'] . ')', $url)->toString();
+        $items[] = [
+          '#markup' => $link,
+          '#allowed_tags' => ['a'],
+        ];
+        // Premier lien = cible du téléchargement automatique.
+        if ($i === 0 && !empty($download['auto'])) {
+          $form['#attached']['drupalSettings']['mediaAlbumAvExportAutoDownload'] = [
+            'urls' => array_map(function ($d) {
+              return Url::fromRoute('media_album_av.export_download', [], ['query' => ['file' => $d['relative']]])->toString();
+            }, $downloads),
+          ];
+        }
+      }
+      $form['download']['links'] = [
+        '#theme' => 'item_list',
+        '#items' => $items,
+      ];
+      if (!empty($downloads[0]['multipart'])) {
+        $form['download']['reassemble'] = [
+          '#type' => 'html_tag',
+          '#tag' => 'p',
+          '#value' => $this->t('Multi-part archive: download ALL parts, then reassemble with: <code>cat @name.part* > @name</code> (Linux/macOS) or <code>copy /b @name.part* @name</code> (Windows).', [
+            '@name' => $downloads[0]['basename'],
+          ]),
+        ];
+      }
+      $form['download']['clear'] = [
+        '#type' => 'submit',
+        '#value' => $this->t('Dismiss'),
+        '#submit' => ['::clearDownloadsSubmit'],
+        '#limit_validation_errors' => [],
+      ];
+    }
 
     $form['import'] = [
       '#type' => 'details',
@@ -130,10 +205,15 @@ class MediaAlbumAvExportImportForm extends FormBase {
     // Note: entity_autocomplete is not #tree here, values arrive flat.
     $nid = (int) $form_state->getValue('nid');
     $destination = trim((string) $form_state->getValue('destination'));
+    $part_size = (int) $form_state->getValue('part_size');
+    $auto_download = (bool) $form_state->getValue('auto_download');
     if ($nid <= 0 || $destination === '') {
       $this->messenger()->addError($this->t('Select an album and a destination directory.'));
       return;
     }
+    // Sécuriser : forcer l'export sous private://album-export (téléchargeable
+    // via le contrôleur). temporary:// (/tmp) n'est pas servi par le web.
+    $destination = $this->normalizeExportDestination($destination);
 
     $manifest = $this->exportImport->prepareExport($nid, $destination);
     if ($manifest === NULL) {
@@ -151,7 +231,7 @@ class MediaAlbumAvExportImportForm extends FormBase {
     // Finalize even with zero media (writes manifest + archive).
     $operations[] = [
       [static::class, 'finishExport'],
-      [$manifest],
+      [$manifest, $part_size, $auto_download],
     ];
 
     batch_set([
@@ -182,15 +262,17 @@ class MediaAlbumAvExportImportForm extends FormBase {
   /**
    * Batch operation: writes the manifest and creates the archive.
    */
-  public static function finishExport(array $manifest, array &$context): void {
+  public static function finishExport(array $manifest, int $part_size, bool $auto_download, array &$context): void {
     $service = \Drupal::service('media_album_av.export_import');
     // Merge medias exported by previous operations.
     if (isset($context['results']['manifest']['medias'])) {
       $manifest['medias'] = $context['results']['manifest']['medias'];
     }
-    $final = $service->finalizeExport($manifest);
+    $final = $service->finalizeExport($manifest, $part_size);
     $context['results']['stats']['terms'] = $final['terms'];
-    $context['results']['archive'] = $final['archive'];
+    $context['results']['archives'] = $final['archives'];
+    $context['results']['multipart'] = $final['multipart'];
+    $context['results']['auto_download'] = $auto_download;
     $context['results']['destination'] = $manifest['destination'];
   }
 
@@ -200,25 +282,103 @@ class MediaAlbumAvExportImportForm extends FormBase {
   public static function finishedExport(bool $success, array $results, array $operations): void {
     $stats = $results['stats'] ?? ['medias' => 0, 'files' => 0, 'errors' => 0, 'terms' => 0];
     if ($success) {
-      $message = t(
-        'Export done. Medias: @medias, files: @files, terms: @terms, errors: @errors. Package: @destination',
+      $archives = $results['archives'] ?? [];
+      $multipart = !empty($results['multipart']);
+      $auto_download = !empty($results['auto_download']);
+
+      // Persister les liens en tempstore : le batch redirige vers une requête
+      // neuve, donc $results ne survit pas jusqu'au buildForm suivant.
+      $downloads = [];
+      foreach ($archives as $archive_uri) {
+        $relative = preg_replace('#^private://album-export/#', '', $archive_uri);
+        if ($relative === $archive_uri) {
+          continue;
+        }
+        $real = \Drupal::service('file_system')->realpath($archive_uri);
+        $size = ($real && is_file($real)) ? \Drupal::service('file_system')->getFileSize($real) : 0;
+        $downloads[] = [
+          'relative' => $relative,
+          'label' => basename($archive_uri),
+          'basename' => preg_replace('/\.part\d+$/', '', basename($archive_uri)),
+          'size' => \Drupal::service('file_system')->formatSize($size),
+          'multipart' => $multipart,
+          'auto' => $auto_download,
+        ];
+      }
+      if (!empty($downloads)) {
+        \Drupal::service('tempstore.private')->get('media_album_av')->set('export_downloads', $downloads);
+      }
+
+      // Message SANS HTML : le messenger échappe les balises (d'où le
+      // "<a href...>" affiché en texte). Les vrais liens cliquables sont
+      // rendus dans la section "Download ready archives" du formulaire.
+      \Drupal::messenger()->addStatus(t(
+        'Export done. Medias: @medias, files: @files, terms: @terms, errors: @errors. @count archive(s) ready below (@mode).',
         [
           '@medias' => $stats['medias'],
           '@files' => $stats['files'],
           '@terms' => $stats['terms'] ?? 0,
           '@errors' => $stats['errors'],
-          '@destination' => $results['destination'] ?? '',
+          '@count' => count($downloads),
+          '@mode' => $multipart ? t('multi-part')->render() : t('single archive')->render(),
         ]
-      );
-      if (!empty($results['archive'])) {
-        $url = \Drupal::service('file_url_generator')->generateAbsoluteString($results['archive']);
-        $message .= ' ' . t('<a href=":url">Download the .zip archive</a>.', [':url' => $url]);
-      }
-      \Drupal::messenger()->addStatus($message);
+      ));
     }
     else {
       \Drupal::messenger()->addError(t('Export did not complete. Check the logs.'));
     }
+  }
+
+  /**
+   * Normalizes the export destination under private://album-export.
+   */
+  protected function normalizeExportDestination(string $destination): string {
+    $destination = rtrim($destination, '/');
+    // Refuser les schemes non téléchargeables (temporary://, public:// brut...).
+    if (strpos($destination, 'private://album-export') !== 0) {
+      // Extraire un nom de dossier sûr depuis la saisie.
+      $base = basename(preg_replace('#^[a-z0-9]+://#i', '', $destination));
+      $base = preg_replace('/[^a-zA-Z0-9_-]+/', '-', $base);
+      if ($base === '' || $base === '-') {
+        $base = 'album-export-' . date('Ymd-His');
+      }
+      $destination = 'private://album-export/' . $base;
+      $this->messenger()->addWarning($this->t('Destination moved under @dest so archives can be downloaded (temporary:// is not web-accessible).', ['@dest' => $destination]));
+    }
+    return $destination;
+  }
+
+  /**
+   * Returns pending download links stored by the last export.
+   *
+   * @return array[]
+   *   List of ['relative', 'label', 'basename', 'size', 'multipart', 'auto'].
+   */
+  protected function getPendingDownloads(): array {
+    try {
+      $downloads = \Drupal::service('tempstore.private')->get('media_album_av')->get('export_downloads') ?? [];
+    }
+    catch (\Exception $e) {
+      return [];
+    }
+    // Ne garder que les fichiers existants.
+    $file_system = \Drupal::service('file_system');
+    $valid = [];
+    foreach ($downloads as $download) {
+      $real = $file_system->realpath('private://album-export/' . ($download['relative'] ?? ''));
+      if ($real && is_file($real)) {
+        $valid[] = $download;
+      }
+    }
+    return $valid;
+  }
+
+  /**
+   * Dismisses the download section.
+   */
+  public function clearDownloadsSubmit(array &$form, FormStateInterface $form_state) {
+    \Drupal::service('tempstore.private')->get('media_album_av')->delete('export_downloads');
+    $this->messenger()->addStatus($this->t('Download links dismissed (files are kept under private://album-export).'));
   }
 
   /**

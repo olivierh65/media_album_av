@@ -148,17 +148,40 @@ class MediaAlbumAvExportImport {
    *
    * @param array $manifest
    *   Manifest built by prepareExport() + exportSingleMedia().
+   * @param int $part_size
+   *   Optional split size in bytes. 0 = single .zip archive. When > 0 and the
+   *   archive is bigger than this size, it is split into
+   *   <name>.zip.part1, .part2, ... (binary split, reassemblable with
+   *   combineArchiveParts() or `cat *.part* > archive.zip`). Each part is
+   *   downloaded separately through the export-download controller, which
+   *   solves both the "several GB download" issue (resume per part, no PHP
+   *   memory/timeout blowup) and the temporary:// issue (parts live under
+   *   private://album-export, streamed by Drupal).
    *
    * @return array
-   *   Statistics: terms, archive.
+   *   Statistics: terms, archive (first URI for BC), archives (all URIs),
+   *   multipart (bool), part_size.
    */
-  public function finalizeExport(array $manifest): array {
+  public function finalizeExport(array $manifest, int $part_size = 0): array {
     $destination = $manifest['destination'];
     unset($manifest['term_paths'], $manifest['mids'], $manifest['destination']);
     file_put_contents($destination . '/manifest.json', json_encode($manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+    $archive = $this->createArchive($destination);
+    $archives = $archive !== NULL ? [$archive] : [];
+    $multipart = FALSE;
+    if ($archive !== NULL && $part_size > 0) {
+      $parts = $this->splitArchive($archive, $part_size);
+      if (count($parts) > 1) {
+        $archives = $parts;
+        $multipart = TRUE;
+      }
+    }
     return [
       'terms' => count($manifest['terms'] ?? []),
-      'archive' => $this->createArchive($destination),
+      'archive' => $archives[0] ?? NULL,
+      'archives' => $archives,
+      'multipart' => $multipart,
+      'part_size' => $part_size,
     ];
   }
 
@@ -172,7 +195,16 @@ class MediaAlbumAvExportImport {
    *   Import state (source dir, manifest, tid_map), or NULL on failure.
    */
   public function prepareImport(string $source): ?array {
-    if (substr($source, -4) === '.zip') {
+    if (substr($source, -4) === '.zip' || preg_match('/\.zip\.part\d+$/', $source)) {
+      // Archive multi-part : réassembler d'abord (cat part1 part2 ... > .zip).
+      if (preg_match('/\.zip\.part\d+$/', $source)) {
+        $original = preg_replace('/\.part\d+$/', '', $source);
+        $combined = $this->combineArchiveParts($original);
+        if ($combined === NULL) {
+          return NULL;
+        }
+        $source = $combined;
+      }
       $extract_dir = 'temporary://album-import-' . time();
       if (!$this->extractArchive($source, $extract_dir)) {
         return NULL;
@@ -386,6 +418,171 @@ class MediaAlbumAvExportImport {
     $zip->close();
 
     return file_exists($real_archive) ? $archive_uri : NULL;
+  }
+
+  /**
+   * Splits a large archive into binary parts of at most $part_size bytes.
+   *
+   * Uses chunked reads/writes (8 MB) so multi-GB archives never exhaust PHP
+   * memory. The original .zip is removed after a successful split to save
+   * disk space; parts are named <archive>.zip.part1, .part2, ...
+   *
+   * @param string $archive_uri
+   *   Archive URI (ex: private://album-export/foo.zip).
+   * @param int $part_size
+   *   Max part size in bytes.
+   *
+   * @return string[]
+   *   List of part URIs, or [$archive_uri] when no split was needed/possible.
+   */
+  public function splitArchive(string $archive_uri, int $part_size): array {
+    if ($part_size <= 0) {
+      return [$archive_uri];
+    }
+    $real_archive = $this->fileSystem->realpath($archive_uri);
+    if (!$real_archive || !is_file($real_archive)) {
+      return [$archive_uri];
+    }
+    $total = filesize($real_archive);
+    if ($total === FALSE || $total <= $part_size) {
+      return [$archive_uri];
+    }
+
+    $in = fopen($real_archive, 'rb');
+    if (!$in) {
+      return [$archive_uri];
+    }
+    $parts = [];
+    $index = 1;
+    $chunk = 8 * 1024 * 1024;
+    $written_in_part = 0;
+    $out = NULL;
+    try {
+      while (!feof($in)) {
+        if ($out === NULL) {
+          $part_uri = $archive_uri . '.part' . $index;
+          $real_part = $this->fileSystem->realpath($this->fileSystem->dirname($part_uri));
+          if (!$real_part) {
+            break;
+          }
+          $real_part .= '/' . basename($part_uri);
+          $out = fopen($real_part, 'wb');
+          if (!$out) {
+            break;
+          }
+          $parts[] = $part_uri;
+          $written_in_part = 0;
+        }
+        $to_read = min($chunk, $part_size - $written_in_part);
+        $data = fread($in, $to_read);
+        if ($data === FALSE || $data === '') {
+          break;
+        }
+        fwrite($out, $data);
+        $written_in_part += strlen($data);
+        if ($written_in_part >= $part_size) {
+          fclose($out);
+          $out = NULL;
+          $index++;
+        }
+      }
+    }
+    finally {
+      if ($out !== NULL) {
+        fclose($out);
+      }
+      fclose($in);
+    }
+
+    // Split incomplet ou à une seule part : on garde l'archive d'origine.
+    if (count($parts) <= 1) {
+      foreach ($parts as $part_uri) {
+        $real_part = $this->fileSystem->realpath($part_uri);
+        if ($real_part && file_exists($real_part)) {
+          @unlink($real_part);
+        }
+      }
+      return [$archive_uri];
+    }
+
+    // Succès : l'original est remplacé par les parts (économie disque).
+    @unlink($real_archive);
+    return $parts;
+  }
+
+  /**
+   * Reassembles split parts back into a single .zip archive.
+   *
+   * Accepts either the original archive URI (parts derived as
+   * <archive>.zip.partN) or the explicit list of part URIs. Used by
+   * prepareImport() so a multi-part export can be reimported transparently.
+   *
+   * @param string $archive_uri
+   *   Original archive URI (ex: private://album-export/foo.zip).
+   * @param string[] $parts
+   *   Optional explicit part URIs. When empty, derived from $archive_uri.
+   *
+   * @return string|null
+   *   The reassembled archive URI, or NULL on failure.
+   */
+  public function combineArchiveParts(string $archive_uri, array $parts = []): ?string {
+    if (empty($parts)) {
+      $parts = [];
+      $index = 1;
+      while (TRUE) {
+        $candidate = $archive_uri . '.part' . $index;
+        $real = $this->fileSystem->realpath($candidate);
+        if (!$real || !is_file($real)) {
+          break;
+        }
+        $parts[] = $candidate;
+        $index++;
+      }
+    }
+    if (empty($parts)) {
+      return file_exists($archive_uri) ? $archive_uri : NULL;
+    }
+
+    $real_target = $this->fileSystem->realpath($this->fileSystem->dirname($archive_uri));
+    if (!$real_target) {
+      return NULL;
+    }
+    $real_target .= '/' . basename($archive_uri);
+    $out = fopen($real_target, 'wb');
+    if (!$out) {
+      return NULL;
+    }
+    $chunk = 8 * 1024 * 1024;
+    try {
+      foreach ($parts as $part_uri) {
+        $real_part = $this->fileSystem->realpath($part_uri);
+        if (!$real_part || !is_file($real_part)) {
+          fclose($out);
+          @unlink($real_target);
+          return NULL;
+        }
+        $in = fopen($real_part, 'rb');
+        if (!$in) {
+          fclose($out);
+          @unlink($real_target);
+          return NULL;
+        }
+        while (!feof($in)) {
+          $data = fread($in, $chunk);
+          if ($data === FALSE || $data === '') {
+            break;
+          }
+          fwrite($out, $data);
+        }
+        fclose($in);
+      }
+    }
+    finally {
+      if (is_resource($out)) {
+        fclose($out);
+      }
+    }
+    return file_exists($real_target) ? $archive_uri : NULL;
   }
 
   /**

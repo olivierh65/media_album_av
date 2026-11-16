@@ -77,3 +77,10 @@ media_album_av.export_import:
     _title: 'Media Album AV – Export / Import'
   requirements:
     _permission: 'media_album_av.export_import'
+media_album_av.export_download:
+  path: '/admin/content/media-album-av/export-download'
+  defaults:
+    _controller: '\Drupal\media_album_av\Controller\ExportDownloadController::download'
+    _title: 'Download album export'
+  requirements:
+    _permission: 'media_album_av.export_import'
